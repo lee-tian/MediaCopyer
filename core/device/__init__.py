@@ -75,6 +75,12 @@ def get_device_from_exif(file_path: str) -> str:
                         return 'DJI'
                     else:
                         return make
+                
+                # If no make found, try to identify from model
+                if model and not make:
+                    model_lower = model.lower()
+                    if any(x in model_lower for x in ['a7', 'a9', 'fx', 'rx', 'zv', 'alpha', 'cybershot']):
+                        return 'Sony'
                         
     except Exception as e:
         pass
@@ -151,11 +157,21 @@ def get_device_from_filename(file_path: str) -> str:
         return 'DJI'
     elif filename.startswith('GOPR') or filename.startswith('GP'):
         return 'GoPro'
-    elif filename.startswith('DSC') or filename.startswith('IMG'):
-        # These are common but not device-specific
-        pass
+    elif filename.startswith('DSC'):
+        # Sony cameras commonly use DSC prefix
+        return 'Sony'
     elif 'PANO' in filename:
         # Could be DJI panorama
         return 'DJI'
+    # Sony camera filename patterns
+    elif any(filename.startswith(prefix) for prefix in ['_DSC', 'SONY', 'ILCE', 'ILCA', 'FX', 'RX']):
+        return 'Sony'
+    # More Sony video patterns
+    elif any(pattern in filename for pattern in ['C0001', 'C0002', 'C0003', 'C0004', 'C0005']):
+        # Sony video files often have C#### pattern
+        return 'Sony'
+    elif filename.startswith('IMG'):
+        # IMG is too generic, keep as unknown for now
+        pass
     
     return "Unknown"

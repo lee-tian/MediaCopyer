@@ -18,8 +18,12 @@ def main():
                        help='Move files instead of copying (default: copy)')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show what would be done without actually moving/copying files')
+    parser.add_argument('--organization-mode', choices=['date', 'device', 'date_device'], 
+                       default='date',
+                       help='Organization mode: date (Video/2025/2025-07-25), device (Video/2025/DJI), or date_device (Video/2025/2025-07-25/DJI)')
+    # Keep backward compatibility
     parser.add_argument('--by-device', action='store_true',
-                       help='Organize files by device (camera/drone) instead of type and date')
+                       help='Organize files by device (same as --organization-mode device) - deprecated')
     
     args = parser.parse_args()
     
@@ -36,23 +40,54 @@ def main():
         print(f"Error: Cannot create or access destination directory '{dest_dir}'!")
         sys.exit(1)
     
+    # Determine organization mode (handle backward compatibility)
+    organization_mode = args.organization_mode
+    if args.by_device:
+        organization_mode = 'device'
+        print("Warning: --by-device is deprecated. Use --organization-mode device instead.")
+    
+    # Description mapping for display
+    mode_descriptions = {
+        'date': 'By Date (Video/2025/2025-07-25)',
+        'device': 'By Device (Video/2025/DJI)',
+        'date_device': 'By Date and Device (Video/2025/2025-07-25/DJI)'
+    }
+    
     print("Media Copyer - Organizing your media files")
     print("="*50)
     print(f"Source: {source_dir}")
     print(f"Destination: {dest_dir}")
     print(f"Mode: {'Move' if args.move else 'Copy'}")
-    print(f"Organization: {'By Device' if args.by_device else 'By Type and Date'}")
+    print(f"Organization: {mode_descriptions[organization_mode]}")
+    if args.dry_run:
+        print("DRY RUN: No files will actually be moved/copied")
     print("="*50)
     
     # Use the new modular organize function
+    def progress_callback(current, total, filename):
+        print(f"Processing [{current}/{total}]: {filename}")
+    
     try:
-        organize_media_files(
+        stats = organize_media_files(
             source_dir=source_dir,
             dest_dir=dest_dir,
             move_mode=args.move,
             dry_run=args.dry_run,
-            by_device=args.by_device
+            organization_mode=organization_mode,
+            progress_callback=progress_callback
         )
+        
+        # Print results
+        print("\n" + "="*50)
+        print("Organization Complete!")
+        print(f"Total files processed: {stats['processed']}")
+        print(f"Photos: {stats['photos']}")
+        print(f"Videos: {stats['videos']}")
+        print(f"Errors: {stats['errors']}")
+        if stats['devices']:
+            print(f"Devices found: {', '.join(sorted(stats['devices']))}")
+        print("="*50)
+        
     except KeyboardInterrupt:
         print("\nOperation cancelled by user")
         sys.exit(1)
