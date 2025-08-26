@@ -76,6 +76,8 @@ class FileProcessor(I18nMixin):
             # Define callback functions
             def progress_callback(current, total, filename):
                 """Callback function for progress updates"""
+                # Update progress bar with percentage
+                self.progress_display.set_progress(current, total)
                 self.progress_display.set_status(_("processing_file_progress").format(current, total, filename))
                 self.log_display.add_message(_("processing_file").format(filename))
                 self.log_display.update_display()
@@ -125,4 +127,4 @@ class FileProcessor(I18nMixin):
             self.button_panel.set_start_button_state('normal')
             self.progress_display.stop_progress()
             if not hasattr(self, '_processing_complete'):
-                self.progress_display.set_status(_("ready_status"))
+                self.progress_display.reset_progress()

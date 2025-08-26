@@ -68,17 +68,23 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
         
         self.progress_var = tk.StringVar()
         self.progress_var.set(_("ready_status"))
+        self.percentage_var = tk.StringVar()
+        self.percentage_var.set("")
         
         # Setup the layout
         self.columnconfigure(0, weight=1)
         
-        # Progress bar
+        # Progress bar - start in indeterminate mode
         self.progress_bar = ttk.Progressbar(self, mode='indeterminate')
         self.progress_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=5)
         
+        # Percentage label
+        self.percentage_label = ttk.Label(self, textvariable=self.percentage_var, font=('Arial', 8))
+        self.percentage_label.grid(row=1, column=0)
+        
         # Status label
         self.status_label = ttk.Label(self, textvariable=self.progress_var)
-        self.status_label.grid(row=1, column=0)
+        self.status_label.grid(row=2, column=0)
     
     def update_texts(self):
         """Update texts when language changes"""
@@ -87,16 +93,37 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
             self.progress_var.set(_("ready_status"))
     
     def start_progress(self):
-        """Start the progress bar animation"""
+        """Start the progress bar animation in indeterminate mode"""
+        self.progress_bar.config(mode='indeterminate')
         self.progress_bar.start()
+        self.percentage_var.set("")
     
     def stop_progress(self):
         """Stop the progress bar animation"""
         self.progress_bar.stop()
     
+    def set_progress(self, current, total):
+        """Set the progress bar to determinate mode and update percentage"""
+        if total > 0:
+            percentage = (current / total) * 100
+            # Switch to determinate mode if not already
+            if self.progress_bar.cget('mode') == 'indeterminate':
+                self.progress_bar.stop()
+                self.progress_bar.config(mode='determinate', maximum=100, value=0)
+            
+            # Update progress value and percentage display
+            self.progress_bar.config(value=percentage)
+            self.percentage_var.set(f"{percentage:.1f}% ({current}/{total})")
+    
     def set_status(self, status):
         """Set the status text"""
         self.progress_var.set(status)
+    
+    def reset_progress(self):
+        """Reset progress bar to initial state"""
+        self.progress_bar.config(mode='indeterminate', value=0)
+        self.percentage_var.set("")
+        self.progress_var.set(_("ready_status"))
 
 
 class LogDisplay(ttk.LabelFrame, I18nMixin):
