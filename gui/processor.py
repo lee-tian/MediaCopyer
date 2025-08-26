@@ -8,9 +8,10 @@ from pathlib import Path
 from tkinter import messagebox
 
 from core import organize_media_files, validate_directory, scan_directory
+from .i18n import i18n, _, I18nMixin
 
 
-class FileProcessor:
+class FileProcessor(I18nMixin):
     """Handles the file processing operations in a separate thread"""
     
     def __init__(self, progress_display, log_display, button_panel):
@@ -26,16 +27,16 @@ class FileProcessor:
         
         # Validate inputs
         if not source_dir:
-            messagebox.showerror("错误", "请选择源目录")
+            messagebox.showerror(_("error"), _("please_select_source_dir"))
             return
         
         if not dest_dir:
-            messagebox.showerror("错误", "请选择目标目录")
+            messagebox.showerror(_("error"), _("please_select_dest_dir"))
             return
         
         source_path = Path(source_dir)
         if not validate_directory(str(source_path), must_exist=True):
-            messagebox.showerror("错误", f"源目录不存在或无效: {source_path}")
+            messagebox.showerror(_("error"), _("source_dir_invalid").format(source_path))
             return
         
         # Start processing in a separate thread
@@ -53,30 +54,30 @@ class FileProcessor:
     def _process_files(self, source_path, dest_path, move_mode, dry_run, md5_check, organization_mode):
         """Process the media files using the core library"""
         try:
-            self.progress_display.set_status("正在处理文件...")
-            self.log_display.add_message(f"开始处理媒体文件")
-            self.log_display.add_message(f"源目录: {source_path}")
-            self.log_display.add_message(f"目标目录: {dest_path}")
-            self.log_display.add_message(f"模式: {'移动' if move_mode else '复制'}")
+            self.progress_display.set_status(_("processing_files"))
+            self.log_display.add_message(_("start_processing_media"))
+            self.log_display.add_message(_("source_directory").format(source_path))
+            self.log_display.add_message(_("dest_directory").format(dest_path))
+            self.log_display.add_message(_("mode_info").format(_("move_mode_text") if move_mode else _("copy_mode_text")))
             if dry_run:
-                self.log_display.add_message("试运行模式 - 不会实际移动/复制文件")
+                self.log_display.add_message(_("dry_run_info"))
             self.log_display.add_message("="*50)
             self.log_display.update_display()
             
             # Quick scan to show file count
             media_files = scan_directory(source_path)
             if not media_files:
-                self.log_display.add_message("未找到媒体文件!")
+                self.log_display.add_message(_("no_media_files_found"))
                 return
             
-            self.log_display.add_message(f"找到 {len(media_files)} 个媒体文件")
+            self.log_display.add_message(_("found_files_count").format(len(media_files)))
             self.log_display.update_display()
             
             # Define callback functions
             def progress_callback(current, total, filename):
                 """Callback function for progress updates"""
-                self.progress_display.set_status(f"处理文件 {current}/{total}: {filename}")
-                self.log_display.add_message(f"正在处理: {filename}")
+                self.progress_display.set_status(_("processing_file_progress").format(current, total, filename))
+                self.log_display.add_message(_("processing_file").format(filename))
                 self.log_display.update_display()
             
             def log_callback(message):
@@ -97,26 +98,26 @@ class FileProcessor:
             
             # Print statistics
             self.log_display.add_message("\n" + "="*50)
-            self.log_display.add_message("处理完成!")
+            self.log_display.add_message(_("processing_complete"))
             self.log_display.add_message("="*50)
-            self.log_display.add_message(f"照片处理: {stats['photos']}")
-            self.log_display.add_message(f"视频处理: {stats['videos']}")
-            self.log_display.add_message(f"错误数量: {stats['errors']}")
-            self.log_display.add_message(f"总文件数: {stats['processed']}")
+            self.log_display.add_message(_("photos_processed").format(stats['photos']))
+            self.log_display.add_message(_("videos_processed").format(stats['videos']))
+            self.log_display.add_message(_("errors_count").format(stats['errors']))
+            self.log_display.add_message(_("total_files").format(stats['processed']))
             
             if dry_run:
-                self.log_display.add_message("\n(这是试运行 - 没有实际移动/复制文件)")
+                self.log_display.add_message("\n" + _("dry_run_notice"))
             
-            self.progress_display.set_status("处理完成!")
+            self.progress_display.set_status(_("processing_complete"))
             
             if stats['errors'] == 0:
-                messagebox.showinfo("完成", f"成功处理了 {stats['processed']} 个文件!")
+                messagebox.showinfo(_("complete"), _("success_message").format(stats['processed']))
             else:
-                messagebox.showwarning("完成", f"处理了 {stats['processed']} 个文件，但有 {stats['errors']} 个错误。请查看日志了解详情。")
+                messagebox.showwarning(_("complete"), _("warning_message").format(stats['processed'], stats['errors']))
         
         except Exception as e:
-            self.log_display.add_message(f"❌ 发生严重错误: {e}")
-            messagebox.showerror("错误", f"发生错误: {e}")
+            self.log_display.add_message(_("serious_error").format(e))
+            messagebox.showerror(_("error"), _("error_occurred").format(e))
         
         finally:
             # Reset UI state
@@ -124,4 +125,4 @@ class FileProcessor:
             self.button_panel.set_start_button_state('normal')
             self.progress_display.stop_progress()
             if not hasattr(self, '_processing_complete'):
-                self.progress_display.set_status("准备就绪")
+                self.progress_display.set_status(_("ready_status"))
