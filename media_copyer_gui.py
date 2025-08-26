@@ -127,6 +127,148 @@ def get_file_type(file_path: str) -> Optional[str]:
     
     return None
 
+def get_device_name(file_path: str, file_type: str) -> str:
+    """Extract device name from file metadata or filename"""
+    device_name = "Unknown"
+    
+    if file_type == 'photo':
+        # Try to get camera make/model from EXIF
+        device_name = get_device_from_exif(str(file_path))
+    elif file_type == 'video':
+        # Try to get device info from video metadata
+        device_name = get_device_from_video(str(file_path))
+    
+    # If no device found from metadata, try filename patterns
+    if device_name == "Unknown":
+        device_name = get_device_from_filename(str(file_path))
+    
+    return device_name
+
+def get_device_from_exif(file_path: str) -> str:
+    """Extract camera make from EXIF data"""
+    if not PIL_AVAILABLE:
+        return "Unknown"
+    
+    try:
+        with Image.open(file_path) as image:
+            exif_data = image._getexif()
+            if exif_data:
+                make = None
+                model = None
+                
+                for tag, value in exif_data.items():
+                    tag_name = TAGS.get(tag, tag)
+                    if tag_name == 'Make':
+                        make = value.strip()
+                    elif tag_name == 'Model':
+                        model = value.strip()
+                
+                if make:
+                    # Normalize common camera brands
+                    make_lower = make.lower()
+                    if 'canon' in make_lower:
+                        return 'Canon'
+                    elif 'nikon' in make_lower:
+                        return 'Nikon'
+                    elif 'sony' in make_lower:
+                        return 'Sony'
+                    elif 'fujifilm' in make_lower or 'fuji' in make_lower:
+                        return 'Fujifilm'
+                    elif 'olympus' in make_lower:
+                        return 'Olympus'
+                    elif 'panasonic' in make_lower:
+                        return 'Panasonic'
+                    elif 'leica' in make_lower:
+                        return 'Leica'
+                    elif 'apple' in make_lower:
+                        return 'iPhone'
+                    elif 'dji' in make_lower:
+                        return 'DJI'
+                    else:
+                        return make
+                        
+    except Exception as e:
+        pass
+    
+    return "Unknown"
+
+def get_device_from_video(file_path: str) -> str:
+    """Extract device info from video metadata"""
+    try:
+        cmd = [
+            'ffprobe', '-v', 'quiet', '-print_format', 'json',
+            '-show_format', '-show_streams', file_path
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            return "Unknown"
+            
+        metadata = json.loads(result.stdout)
+        
+        # Check format tags first
+        if 'format' in metadata and 'tags' in metadata['format']:
+            tags = metadata['format']['tags']
+            
+            # Look for device/camera info in various tag names
+            device_tags = ['make', 'model', 'camera_make', 'camera_model', 'com.apple.quicktime.make', 'com.apple.quicktime.model']
+            
+            for tag in device_tags:
+                if tag in tags:
+                    device_info = tags[tag].strip()
+                    device_lower = device_info.lower()
+                    
+                    if 'dji' in device_lower:
+                        return 'DJI'
+                    elif 'sony' in device_lower:
+                        return 'Sony'
+                    elif 'canon' in device_lower:
+                        return 'Canon'
+                    elif 'panasonic' in device_lower:
+                        return 'Panasonic'
+                    elif 'gopro' in device_lower:
+                        return 'GoPro'
+                    elif 'apple' in device_lower or 'iphone' in device_lower:
+                        return 'iPhone'
+                    elif device_info and device_info != "Unknown":
+                        return device_info
+        
+        # Check stream tags
+        if 'streams' in metadata:
+            for stream in metadata['streams']:
+                if 'tags' in stream:
+                    tags = stream['tags']
+                    for tag in ['handler_name', 'encoder']:
+                        if tag in tags:
+                            handler = tags[tag].lower()
+                            if 'dji' in handler:
+                                return 'DJI'
+                            elif 'gopro' in handler:
+                                return 'GoPro'
+                                
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
+        pass
+    
+    return "Unknown"
+
+def get_device_from_filename(file_path: str) -> str:
+    """Try to determine device from filename patterns"""
+    filename = Path(file_path).name.upper()
+    
+    # Common filename patterns
+    if filename.startswith('DJI_'):
+        return 'DJI'
+    elif filename.startswith('GOPR') or filename.startswith('GP'):
+        return 'GoPro'
+    elif filename.startswith('DSC') or filename.startswith('IMG'):
+        # These are common but not device-specific
+        pass
+    elif 'PANO' in filename:
+        # Could be DJI panorama
+        return 'DJI'
+    
+    return "Unknown"
+
 def generate_unique_filename(target_path: Path) -> Path:
     """Generate a unique filename if file already exists"""
     if not target_path.exists():
@@ -169,6 +311,7 @@ class MediaCopyerGUI:
         self.dest_dir = tk.StringVar()
         self.move_mode = tk.BooleanVar()
         self.dry_run = tk.BooleanVar()
+        self.by_device = tk.BooleanVar()
         
         self.is_processing = False
         
@@ -209,6 +352,8 @@ class MediaCopyerGUI:
                        variable=self.move_mode).grid(row=0, column=0, sticky=tk.W)
         ttk.Checkbutton(options_frame, text="试运行模式 (Dry run - preview only)", 
                        variable=self.dry_run).grid(row=1, column=0, sticky=tk.W)
+        ttk.Checkbutton(options_frame, text="按设备分类 (Organize by device - e.g., /Movies/2025/DJI)", 
+                       variable=self.by_device).grid(row=2, column=0, sticky=tk.W)
         
         # Control buttons
         button_frame = ttk.Frame(main_frame)
@@ -358,13 +503,29 @@ class MediaCopyerGUI:
                     
                     # Create target directory structure
                     year = file_date.strftime('%Y')
-                    date_str = file_date.strftime('%Y-%m-%d')
+                    
+                    if self.by_device.get():
+                        # Get device name for organization
+                        device_name = get_device_name(str(file_path), file_type)
+                        if 'devices' not in stats:
+                            stats['devices'] = set()
+                        stats['devices'].add(device_name)
+                        
+                        # Organize by device: /Movies/2025/DJI or /Movies/2025/Sony
+                        target_dir = dest_path / year / device_name
+                        self.log_message(f"  设备检测: {device_name}")
+                    else:
+                        # Original organization by type and date
+                        date_str = file_date.strftime('%Y-%m-%d')
+                        
+                        if file_type == 'photo':
+                            target_dir = dest_path / 'Picture' / year / date_str
+                        else:  # video
+                            target_dir = dest_path / 'Video' / year / date_str
                     
                     if file_type == 'photo':
-                        target_dir = dest_path / 'Picture' / year / date_str
                         stats['photos'] += 1
-                    else:  # video
-                        target_dir = dest_path / 'Video' / year / date_str
+                    else:
                         stats['videos'] += 1
                     
                     # Create target directory if it doesn't exist
