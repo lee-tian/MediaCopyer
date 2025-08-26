@@ -16,6 +16,7 @@ class OptionsFrame(ttk.LabelFrame):
         # Initialize variables
         self.move_mode = tk.BooleanVar()
         self.dry_run = tk.BooleanVar()
+        self.md5_check = tk.BooleanVar()
         self.organization_mode = tk.StringVar(value="date")
         
         self._setup_options()
@@ -36,11 +37,18 @@ class OptionsFrame(ttk.LabelFrame):
             variable=self.dry_run
         ).grid(row=1, column=0, sticky=tk.W)
         
+        # MD5 integrity check checkbox
+        ttk.Checkbutton(
+            self, 
+            text="MD5完整性校验 (MD5 integrity verification)", 
+            variable=self.md5_check
+        ).grid(row=2, column=0, sticky=tk.W)
+        
         # Organization mode selection
-        ttk.Label(self, text="组织方式 (Organization Mode):").grid(row=2, column=0, sticky=tk.W, pady=(10,5))
+        ttk.Label(self, text="组织方式 (Organization Mode):").grid(row=3, column=0, sticky=tk.W, pady=(10,5))
         
         mode_frame = ttk.Frame(self)
-        mode_frame.grid(row=3, column=0, sticky=tk.W, padx=(20, 0))
+        mode_frame.grid(row=4, column=0, sticky=tk.W, padx=(20, 0))
         
         # Organization mode radio buttons
         ttk.Radiobutton(
@@ -72,6 +80,10 @@ class OptionsFrame(ttk.LabelFrame):
         """Get the dry run setting"""
         return self.dry_run.get()
     
+    def get_md5_check(self):
+        """Get the MD5 check setting"""
+        return self.md5_check.get()
+    
     def get_organization_mode(self):
         """Get the organization mode setting"""
         return self.organization_mode.get()
@@ -83,6 +95,10 @@ class OptionsFrame(ttk.LabelFrame):
     def set_dry_run(self, value):
         """Set the dry run setting"""
         self.dry_run.set(value)
+    
+    def set_md5_check(self, value):
+        """Set the MD5 check setting"""
+        self.md5_check.set(value)
     
     def set_organization_mode(self, value):
         """Set the organization mode setting"""

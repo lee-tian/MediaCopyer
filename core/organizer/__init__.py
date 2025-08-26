@@ -4,12 +4,35 @@ Core file organization functionality for MediaCopyer
 
 import os
 import shutil
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from typing import List, Tuple, Optional
 
 from ..metadata import get_file_type, get_file_date
 from ..device import get_device_name
+
+
+def calculate_md5(file_path: Path) -> str:
+    """Calculate MD5 hash of a file"""
+    hash_md5 = hashlib.md5()
+    try:
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+    except Exception as e:
+        raise Exception(f"Failed to calculate MD5 for {file_path}: {e}")
+
+
+def verify_file_integrity(source_path: Path, target_path: Path) -> bool:
+    """Verify file integrity by comparing MD5 hashes"""
+    try:
+        source_md5 = calculate_md5(source_path)
+        target_md5 = calculate_md5(target_path)
+        return source_md5 == target_md5
+    except Exception:
+        return False
 
 
 def scan_directory(source_dir: Path) -> List[Tuple[Path, str]]:
@@ -77,7 +100,7 @@ def get_target_directory(dest_path: Path, file_path: Path, file_type: str,
 
 def organize_file(file_path: Path, file_type: str, dest_path: Path, 
                  move_mode: bool = False, dry_run: bool = False, 
-                 organization_mode: str = "date") -> dict:
+                 organization_mode: str = "date", verify_md5: bool = False) -> dict:
     """
     Organize a single media file.
     
@@ -88,6 +111,7 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
         move_mode: Move files instead of copying
         dry_run: Preview mode, don't actually move/copy files
         organization_mode: Organization mode ('date', 'device', 'date_device')
+        verify_md5: Whether to verify file integrity using MD5 checksums
     
     Returns:
         dict: Result with 'success', 'message', 'target_path', 'device_name' (if applicable)
@@ -121,8 +145,38 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
             else:
                 shutil.copy2(str(file_path), str(target_path))
                 operation = "copied"
+                
+            # Verify MD5 if requested and not in move mode
+            if verify_md5 and not move_mode:
+                try:
+                    if not verify_file_integrity(file_path, target_path):
+                        # MD5 verification failed, remove the copied file
+                        if target_path.exists():
+                            target_path.unlink()
+                        return {
+                            'success': False,
+                            'message': f"MD5 verification failed for {file_path.name}",
+                            'target_path': None,
+                            'device_name': device_name,
+                            'operation': None
+                        }
+                    else:
+                        operation += " (MD5 verified)"
+                except Exception as e:
+                    # MD5 verification error, remove the copied file
+                    if target_path.exists():
+                        target_path.unlink()
+                    return {
+                        'success': False,
+                        'message': f"MD5 verification error for {file_path.name}: {e}",
+                        'target_path': None,
+                        'device_name': device_name,
+                        'operation': None
+                    }
         else:
             operation = f"{'move' if move_mode else 'copy'} (dry run)"
+            if verify_md5 and not move_mode:
+                operation += " with MD5 verification"
         
         return {
             'success': True,
@@ -144,7 +198,7 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
 
 def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = False,
                         dry_run: bool = False, organization_mode: str = "date",
-                        progress_callback=None) -> dict:
+                        verify_md5: bool = False, progress_callback=None) -> dict:
     """
     Organize all media files from source to destination directory.
     
@@ -154,6 +208,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         move_mode: Move files instead of copying
         dry_run: Preview mode, don't actually move/copy files
         organization_mode: Organization mode ('date', 'device', 'date_device')
+        verify_md5: Whether to verify file integrity using MD5 checksums
         progress_callback: Callback function for progress updates
         
     Returns:
@@ -189,7 +244,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
             progress_callback(i + 1, len(media_files), file_path.name)
         
         # Organize the file
-        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode)
+        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode, verify_md5)
         stats['results'].append(result)
         
         # Update statistics

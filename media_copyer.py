@@ -21,6 +21,8 @@ def main():
     parser.add_argument('--organization-mode', choices=['date', 'device', 'date_device'], 
                        default='date',
                        help='Organization mode: date (Video/2025/2025-07-25), device (Video/2025/DJI), or date_device (Video/2025/2025-07-25/DJI)')
+    parser.add_argument('--verify-md5', action='store_true',
+                       help='Verify file integrity using MD5 checksums after copying (slower but safer)')
     # Keep backward compatibility
     parser.add_argument('--by-device', action='store_true',
                        help='Organize files by device (same as --organization-mode device) - deprecated')
@@ -73,6 +75,7 @@ def main():
             dest_dir=dest_dir,
             move_mode=args.move,
             dry_run=args.dry_run,
+            verify_md5=args.verify_md5,
             organization_mode=organization_mode,
             progress_callback=progress_callback
         )

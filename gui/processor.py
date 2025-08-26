@@ -19,7 +19,7 @@ class FileProcessor:
         self.button_panel = button_panel
         self.is_processing = False
     
-    def start_processing(self, source_dir, dest_dir, move_mode, dry_run, organization_mode):
+    def start_processing(self, source_dir, dest_dir, move_mode, dry_run, md5_check, organization_mode):
         """Start the file processing in a separate thread"""
         if self.is_processing:
             return
@@ -45,12 +45,12 @@ class FileProcessor:
         
         processing_thread = threading.Thread(
             target=self._process_files,
-            args=(source_path, Path(dest_dir), move_mode, dry_run, organization_mode)
+            args=(source_path, Path(dest_dir), move_mode, dry_run, md5_check, organization_mode)
         )
         processing_thread.daemon = True
         processing_thread.start()
     
-    def _process_files(self, source_path, dest_path, move_mode, dry_run, organization_mode):
+    def _process_files(self, source_path, dest_path, move_mode, dry_run, md5_check, organization_mode):
         """Process the media files using the core library"""
         try:
             self.progress_display.set_status("正在处理文件...")
@@ -90,6 +90,7 @@ class FileProcessor:
                 dest_dir=dest_path,
                 move_mode=move_mode,
                 dry_run=dry_run,
+                verify_md5=md5_check,
                 organization_mode=organization_mode,
                 progress_callback=progress_callback
             )
