@@ -23,7 +23,7 @@ class MediaCopyerGUI:
         self.dest_dir = tk.StringVar()
         self.move_mode = tk.BooleanVar()
         self.dry_run = tk.BooleanVar()
-        self.by_device = tk.BooleanVar()
+        self.organization_mode = tk.StringVar(value="date")  # "date", "device", "date_device"
         
         self.is_processing = False
         
@@ -64,8 +64,19 @@ class MediaCopyerGUI:
                        variable=self.move_mode).grid(row=0, column=0, sticky=tk.W)
         ttk.Checkbutton(options_frame, text="试运行模式 (Dry run - preview only)", 
                        variable=self.dry_run).grid(row=1, column=0, sticky=tk.W)
-        ttk.Checkbutton(options_frame, text="按设备分类 (Organize by device - e.g., /Movies/2025/DJI)", 
-                       variable=self.by_device).grid(row=2, column=0, sticky=tk.W)
+        
+        # Organization mode selection
+        ttk.Label(options_frame, text="组织方式 (Organization Mode):").grid(row=2, column=0, sticky=tk.W, pady=(10,5))
+        
+        mode_frame = ttk.Frame(options_frame)
+        mode_frame.grid(row=3, column=0, sticky=tk.W, padx=(20, 0))
+        
+        ttk.Radiobutton(mode_frame, text="按日期 (By Date): Video/2025/2025-07-25", 
+                       variable=self.organization_mode, value="date").grid(row=0, column=0, sticky=tk.W)
+        ttk.Radiobutton(mode_frame, text="按设备 (By Device): Video/2025/DJI", 
+                       variable=self.organization_mode, value="device").grid(row=1, column=0, sticky=tk.W)
+        ttk.Radiobutton(mode_frame, text="按日期+设备 (By Date+Device): Video/2025/2025-07-25/DJI", 
+                       variable=self.organization_mode, value="date_device").grid(row=2, column=0, sticky=tk.W)
         
         # Control buttons
         button_frame = ttk.Frame(main_frame)
@@ -198,7 +209,7 @@ class MediaCopyerGUI:
                 dest_dir=dest_path,
                 move_mode=self.move_mode.get(),
                 dry_run=self.dry_run.get(),
-                by_device=self.by_device.get(),
+                organization_mode=self.organization_mode.get(),
                 progress_callback=progress_callback
             )
             

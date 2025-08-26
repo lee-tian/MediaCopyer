@@ -46,32 +46,48 @@ def generate_unique_filename(target_path: Path) -> Path:
 
 
 def get_target_directory(dest_path: Path, file_path: Path, file_type: str, 
-                        file_date: datetime, by_device: bool = False) -> Path:
+                        file_date: datetime, organization_mode: str = "date") -> Path:
     """Determine target directory structure based on organization mode"""
     year = file_date.strftime('%Y')
+    date_str = file_date.strftime('%Y-%m-%d')
     
-    if by_device:
-        # Get device name for organization
+    # Determine base type directory
+    if file_type == 'photo':
+        base_dir = dest_path / 'Picture'
+    else:  # video
+        base_dir = dest_path / 'Video'
+    
+    if organization_mode == "date":
+        # Mode 1: Video/2025/2025-07-25
+        target_dir = base_dir / year / date_str
+    elif organization_mode == "device":
+        # Mode 2: Video/2025/DJI
         device_name = get_device_name(str(file_path), file_type)
-        # Organize by device: /Movies/2025/DJI or /Movies/2025/Sony
-        target_dir = dest_path / year / device_name
+        target_dir = base_dir / year / device_name
+    elif organization_mode == "date_device":
+        # Mode 3: Video/2025/2025-07-25/DJI
+        device_name = get_device_name(str(file_path), file_type)
+        target_dir = base_dir / year / date_str / device_name
     else:
-        # Original organization by type and date
-        date_str = file_date.strftime('%Y-%m-%d')
-        
-        if file_type == 'photo':
-            target_dir = dest_path / 'Picture' / year / date_str
-        else:  # video
-            target_dir = dest_path / 'Video' / year / date_str
+        # Default to date mode if unknown mode
+        target_dir = base_dir / year / date_str
     
     return target_dir
 
 
 def organize_file(file_path: Path, file_type: str, dest_path: Path, 
                  move_mode: bool = False, dry_run: bool = False, 
-                 by_device: bool = False) -> dict:
+                 organization_mode: str = "date") -> dict:
     """
     Organize a single media file.
+    
+    Args:
+        file_path: Path to the source file
+        file_type: Type of file ('photo' or 'video')
+        dest_path: Destination base directory
+        move_mode: Move files instead of copying
+        dry_run: Preview mode, don't actually move/copy files
+        organization_mode: Organization mode ('date', 'device', 'date_device')
     
     Returns:
         dict: Result with 'success', 'message', 'target_path', 'device_name' (if applicable)
@@ -81,11 +97,11 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
         file_date = get_file_date(str(file_path), file_type)
         
         # Create target directory structure
-        target_dir = get_target_directory(dest_path, file_path, file_type, file_date, by_device)
+        target_dir = get_target_directory(dest_path, file_path, file_type, file_date, organization_mode)
         
         # Get device name if organizing by device
         device_name = None
-        if by_device:
+        if organization_mode in ["device", "date_device"]:
             device_name = get_device_name(str(file_path), file_type)
         
         # Create target directory if it doesn't exist
@@ -127,7 +143,7 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
 
 
 def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = False,
-                        dry_run: bool = False, by_device: bool = False,
+                        dry_run: bool = False, organization_mode: str = "date",
                         progress_callback=None) -> dict:
     """
     Organize all media files from source to destination directory.
@@ -137,7 +153,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         dest_dir: Destination directory for organized files
         move_mode: Move files instead of copying
         dry_run: Preview mode, don't actually move/copy files
-        by_device: Organize by device instead of by type/date
+        organization_mode: Organization mode ('date', 'device', 'date_device')
         progress_callback: Callback function for progress updates
         
     Returns:
@@ -173,7 +189,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
             progress_callback(i + 1, len(media_files), file_path.name)
         
         # Organize the file
-        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, by_device)
+        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode)
         stats['results'].append(result)
         
         # Update statistics
