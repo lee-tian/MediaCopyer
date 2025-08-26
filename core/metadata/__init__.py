@@ -18,8 +18,60 @@ except ImportError:
 
 
 # File extension constants
-PHOTO_EXTENSIONS = {'.jpg', '.jpeg', '.arw', '.png', '.tiff', '.tif', '.heic', '.cr2', '.nef', '.dng'}
-VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v'}
+PHOTO_EXTENSIONS = {
+    # Standard image formats
+    '.jpg', '.jpeg', '.png', '.tiff', '.tif', '.heic', '.heif', '.gif', '.bmp', '.webp',
+    
+    # Canon RAW formats
+    '.cr2', '.cr3', '.crw',
+    
+    # Nikon RAW formats
+    '.nef', '.nrw',
+    
+    # Sony RAW formats
+    '.arw', '.srf', '.sr2',
+    
+    # Fuji RAW formats
+    '.raf',
+    
+    # Leica RAW formats
+    '.dng', '.rwl', '.raw',
+    
+    # Olympus RAW formats
+    '.orf',
+    
+    # Panasonic RAW formats
+    '.rw2', '.raw',
+    
+    # Pentax RAW formats
+    '.pef', '.ptx',
+    
+    # Sigma RAW formats
+    '.x3f',
+    
+    # Hasselblad RAW formats
+    '.3fr', '.fff',
+    
+    # Phase One RAW formats
+    '.iiq',
+    
+    # Mamiya RAW formats
+    '.mef',
+    
+    # Kodak RAW formats
+    '.dcr', '.kdc',
+    
+    # Minolta RAW formats
+    '.mrw',
+    
+    # Casio RAW formats
+    '.bay',
+    
+    # Epson RAW formats
+    '.erf'
+}
+
+VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp', '.mts', '.m2ts'}
 
 
 def get_creation_date_from_exif(file_path: str) -> Optional[datetime]:

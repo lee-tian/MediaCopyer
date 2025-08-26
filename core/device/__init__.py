@@ -65,22 +65,61 @@ def get_device_from_exif(file_path: str) -> str:
                         return 'Fujifilm'
                     elif 'olympus' in make_lower:
                         return 'Olympus'
-                    elif 'panasonic' in make_lower:
+                    elif 'panasonic' in make_lower or 'lumix' in make_lower:
                         return 'Panasonic'
                     elif 'leica' in make_lower:
                         return 'Leica'
+                    elif 'pentax' in make_lower or 'ricoh' in make_lower:
+                        return 'Pentax'
+                    elif 'sigma' in make_lower:
+                        return 'Sigma'
+                    elif 'hasselblad' in make_lower:
+                        return 'Hasselblad'
+                    elif 'phase one' in make_lower or 'phaseone' in make_lower:
+                        return 'Phase One'
+                    elif 'mamiya' in make_lower:
+                        return 'Mamiya'
+                    elif 'kodak' in make_lower:
+                        return 'Kodak'
+                    elif 'minolta' in make_lower:
+                        return 'Minolta'
+                    elif 'casio' in make_lower:
+                        return 'Casio'
+                    elif 'epson' in make_lower:
+                        return 'Epson'
                     elif 'apple' in make_lower:
                         return 'iPhone'
                     elif 'dji' in make_lower:
                         return 'DJI'
+                    elif 'gopro' in make_lower:
+                        return 'GoPro'
                     else:
                         return make
                 
                 # If no make found, try to identify from model
                 if model and not make:
                     model_lower = model.lower()
+                    # Sony models
                     if any(x in model_lower for x in ['a7', 'a9', 'fx', 'rx', 'zv', 'alpha', 'cybershot']):
                         return 'Sony'
+                    # Canon models
+                    elif any(x in model_lower for x in ['eos', 'powershot', 'rebel', 'kiss']):
+                        return 'Canon'
+                    # Nikon models
+                    elif any(x in model_lower for x in ['d3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd850', 'z5', 'z6', 'z7', 'z9', 'coolpix']):
+                        return 'Nikon'
+                    # Fujifilm models
+                    elif any(x in model_lower for x in ['x-t', 'x-h', 'x-s', 'x-e', 'x-a', 'x-m', 'gfx', 'finepix']):
+                        return 'Fujifilm'
+                    # Leica models
+                    elif any(x in model_lower for x in ['m10', 'm11', 'q2', 'sl2', 'cl', 'tl']):
+                        return 'Leica'
+                    # Olympus models
+                    elif any(x in model_lower for x in ['om-d', 'pen', 'e-m', 'e-p']):
+                        return 'Olympus'
+                    # Panasonic models
+                    elif any(x in model_lower for x in ['lumix', 'gh', 'g9', 'gx', 'gf']):
+                        return 'Panasonic'
                         
     except Exception as e:
         pass
