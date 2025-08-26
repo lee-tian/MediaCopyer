@@ -1,6 +1,6 @@
 # Media Copyer
 
-A Python script to automatically organize photos and videos by their creation date into a structured directory hierarchy.
+A Python application to automatically organize photos and videos by their creation date into a structured directory hierarchy. Available as both a command-line tool and a GUI application with internationalization support.
 
 ## Features
 
@@ -10,48 +10,94 @@ A Python script to automatically organize photos and videos by their creation da
 - **Flexible Operation**: Supports both copy and move modes
 - **Safe Processing**: Automatically handles duplicate filenames and provides dry-run mode
 - **Wide Format Support**: Handles common photo formats (JPG, PNG, ARW, HEIC, etc.) and video formats (MP4, MOV, AVI, etc.)
+- **GUI Interface**: User-friendly graphical interface with progress tracking
+- **Internationalization**: Supports multiple languages (English and Chinese)
+- **Modular Architecture**: Clean, maintainable code structure for easy development
 
 ## Installation
 
-1. Clone or download this repository
+### For Users
+
+1. Clone or download this repository:
+   ```bash
+   git clone <repository-url>
+   cd MediaCopyer
+   ```
+
 2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Optional**: Install ffmpeg for video metadata support:
+3. **Optional**: Install ffmpeg for enhanced video metadata support:
    - macOS: `brew install ffmpeg`
    - Ubuntu/Debian: `sudo apt install ffmpeg`
    - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
 
+### For Developers
+
+1. Clone the repository and set up a virtual environment:
+   ```bash
+   git clone <repository-url>
+   cd MediaCopyer
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Install development tools (optional):
+   ```bash
+   pip install pylint black pytest
+   ```
+
 ## Usage
 
-### Basic Usage
+### GUI Application (Recommended)
 
+Run the graphical interface:
 ```bash
-python3 media_copyer.py SOURCE_DIR DESTINATION_DIR
+python media_copyer_gui.py
 ```
 
-### Command Line Options
+The GUI provides:
+- Easy source and destination folder selection
+- Real-time progress tracking
+- Language selection (English/Chinese)
+- Dry-run mode for testing
+- Copy/Move operation selection
+
+### Command Line Interface
+
+For automation or script usage:
+
+```bash
+python media_copyer.py SOURCE_DIR DESTINATION_DIR [OPTIONS]
+```
+
+#### Command Line Options
 
 - `--move`: Move files instead of copying them
 - `--dry-run`: Preview what would be done without actually moving/copying files
 
-### Examples
+#### Examples
 
 1. **Copy files** from source to destination:
    ```bash
-   python3 media_copyer.py /path/to/source /path/to/destination
+   python media_copyer.py /path/to/source /path/to/destination
    ```
 
 2. **Move files** (organize in place):
    ```bash
-   python3 media_copyer.py /path/to/source /path/to/destination --move
+   python media_copyer.py /path/to/source /path/to/destination --move
    ```
 
 3. **Preview operations** without making changes:
    ```bash
-   python3 media_copyer.py /path/to/source /path/to/destination --dry-run
+   python media_copyer.py /path/to/source /path/to/destination --dry-run
    ```
 
 ## Output Structure
@@ -101,22 +147,100 @@ destination/
 - WebM (.webm)
 - iTunes Video (.m4v)
 
+## Project Structure
+
+```
+MediaCopyer/
+├── core/                          # Core business logic
+│   ├── organizer/                 # Media organization functionality
+│   │   ├── media_organizer.py     # Main organizer class
+│   │   ├── scanner.py             # File scanning
+│   │   ├── file_operations.py     # File copy/move operations
+│   │   └── hash_utils.py          # File deduplication
+│   ├── utils/                     # Utility modules
+│   │   ├── filesystem.py          # File system operations
+│   │   └── string_utils.py        # String manipulation
+│   ├── metadata/                  # Metadata extraction (future)
+│   └── device/                    # Device detection (future)
+├── gui/                           # GUI application
+│   ├── main_window.py             # Main application window
+│   ├── widgets.py                 # Custom UI widgets
+│   ├── processor.py               # Background processing
+│   ├── options_frame.py           # Options configuration
+│   ├── i18n.py                    # Internationalization
+│   └── locales/                   # Language files
+│       ├── en_US.py               # English translations
+│       └── zh_CN.py               # Chinese translations
+├── media_copyer.py                # Command-line entry point
+├── media_copyer_gui.py            # GUI entry point
+└── requirements.txt               # Python dependencies
+```
+
+## Development
+
+### Running Tests
+
+Currently, the project uses manual testing. To test functionality:
+
+1. **Test CLI version**:
+   ```bash
+   python media_copyer.py test_source test_dest --dry-run
+   ```
+
+2. **Test GUI version**:
+   ```bash
+   python media_copyer_gui.py
+   ```
+
+### Code Style
+
+The project follows Python PEP 8 conventions. Use `black` for code formatting:
+```bash
+black .
+```
+
+### Adding New Features
+
+1. **Core functionality**: Add to appropriate modules in `core/`
+2. **GUI features**: Extend classes in `gui/`
+3. **Internationalization**: Add translations to `gui/locales/`
+
+### Architecture
+
+- **Modular Design**: Separates core logic from GUI
+- **Event-Driven GUI**: Uses threading for non-blocking operations  
+- **Extensible**: Easy to add new file types or organization patterns
+- **I18n Ready**: Built-in support for multiple languages
+
 ## Requirements
 
 - Python 3.6+
 - Pillow (for EXIF data reading)
-- ffmpeg (optional, for video metadata)
+- tkinter (for GUI, usually included with Python)
+- ffmpeg (optional, for enhanced video metadata)
 
 ## Error Handling
 
 - Files with unreadable metadata fall back to modification time
 - Duplicate filenames are automatically renamed (e.g., `photo_1.jpg`)
 - Processing errors are logged but don't stop the overall operation
+- GUI provides real-time error reporting and progress updates
 - Statistics are provided at the end of processing
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make changes and test thoroughly
+4. Commit changes: `git commit -m "Description"`
+5. Push to branch: `git push origin feature-name`
+6. Create a Pull Request
 
 ## Notes
 
-- The script preserves original file timestamps when copying
+- The application preserves original file timestamps when copying
 - EXIF data is prioritized for photos, video metadata for videos
 - File modification time is used as fallback when metadata is unavailable
-- The script recursively scans subdirectories in the source folder
+- The application recursively scans subdirectories in the source folder
+- GUI version provides better user experience with progress tracking
+- Both CLI and GUI versions use the same core processing engine
