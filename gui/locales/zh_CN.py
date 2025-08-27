@@ -74,9 +74,14 @@ translations = {
     "error_occurred": "处理过程中发生错误: {}",
     "ready_status": "就绪",
     
+    # Tab Names
+    "settings": "设置",
+    "execution": "执行",
+    "directory_selection": "目录选择",
+    
     # Other Messages
-    "dependency_warning": "可以继续使用，但会影响日期识别精度",
+    "dependency_warning": "可以继续，但日期识别准确性可能受到影响",
     "select_directories": "请先选择源目录和目标目录",
-    "invalid_source": "源目录不存在或无法访问",
-    "invalid_destination": "目标目录不存在或无法访问",
+    "invalid_source": "源目录不存在或不可访问",
+    "invalid_destination": "目标目录不存在或不可访问",
 }

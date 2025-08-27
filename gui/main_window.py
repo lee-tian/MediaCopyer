@@ -11,6 +11,7 @@ from .widgets import DirectorySelector, ProgressDisplay, LogDisplay, ButtonPanel
 from .options_frame import OptionsFrame
 from .processor import FileProcessor
 from .i18n import i18n, _, I18nMixin
+from .styles import ModernStyle, ModernWidget, configure_modern_style
 
 
 class MediaCopyerApp:
@@ -18,7 +19,14 @@ class MediaCopyerApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.geometry("800x600")
+        self.root.geometry("1000x800")
+        
+        # Configure modern styling
+        configure_modern_style()
+        
+        # Set window properties
+        self.root.configure(bg=ModernStyle.BACKGROUND)
+        self.root.minsize(900, 700)
         
         # Subscribe to language changes
         i18n.add_observer(self._update_texts)
@@ -31,49 +39,43 @@ class MediaCopyerApp:
         self._update_title()
     
     def _setup_ui(self):
-        """Setup the user interface"""
-        # Main frame
-        main_frame = ttk.Frame(self.root, padding="10")
+        """Setup the tabbed user interface"""
+        # Main container
+        main_frame = ttk.Frame(self.root, style='Modern.TFrame', padding=ModernStyle.PADDING_LG)
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(7, weight=1)  # Make log area expandable
+        main_frame.rowconfigure(1, weight=1)
         
-        # Header frame with title and language selector
-        header_frame = ttk.Frame(main_frame)
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
-        header_frame.columnconfigure(0, weight=1)
+        # Header card with title and language
+        header_card = ModernWidget.create_card_frame(main_frame, padding=ModernStyle.PADDING_MD)
+        header_card.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_SM))
+        header_card.columnconfigure(0, weight=1)
         
-        # Title
-        self.title_label = ttk.Label(
-            header_frame, 
-            text=_("main_title"), 
-            font=('TkDefaultFont', 16, 'bold')
-        )
+        title_frame = ttk.Frame(header_card, style='Modern.TFrame')
+        title_frame.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        title_frame.columnconfigure(0, weight=1)
+        
+        self.title_label = ModernWidget.create_title_label(title_frame, text=_("main_title"))
         self.title_label.grid(row=0, column=0, sticky=tk.W)
         
-        # Language selector frame
-        lang_frame = ttk.Frame(header_frame)
+        # Language selector
+        lang_frame = ttk.Frame(title_frame, style='Modern.TFrame')
         lang_frame.grid(row=0, column=1, sticky=tk.E)
         
-        ttk.Label(lang_frame, text=_("language") + ":").grid(row=0, column=0, padx=(0, 5))
+        ttk.Label(lang_frame, text=_("language") + ":", style='Modern.TLabel').grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
         self.language_var = tk.StringVar(value=i18n.get_current_language())
         self.language_combo = ttk.Combobox(
-            lang_frame, 
-            textvariable=self.language_var,
-            state="readonly",
-            width=10
+            lang_frame, textvariable=self.language_var, state="readonly", width=10,
+            font=(ModernStyle.FONT_FAMILY, ModernStyle.FONT_SIZE_SM)
         )
         
-        # Setup language options
         languages = i18n.get_available_languages()
         self.language_combo['values'] = list(languages.values())
-        
-        # Set current selection
         current_lang = i18n.get_current_language()
         if current_lang in languages:
             self.language_combo.set(languages[current_lang])
@@ -81,37 +83,87 @@ class MediaCopyerApp:
         self.language_combo.bind('<<ComboboxSelected>>', self._on_language_change)
         self.language_combo.grid(row=0, column=1)
         
-        # Source directory selector
-        self.source_selector = DirectorySelector(
-            main_frame, 
-            _("source_directory"), 
-            _("select_source")
-        )
-        self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+        # Create notebook for tabs
+        self.notebook = ttk.Notebook(main_frame, style='Modern.TNotebook')
+        self.notebook.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Destination directory selector
-        self.dest_selector = DirectorySelector(
-            main_frame, 
-            _("destination_directory"), 
-            _("select_destination")
-        )
-        self.dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
+        # Setup tabs
+        self._setup_settings_tab()
+        self._setup_execution_tab()
         
-        # Options frame
-        self.options_frame = OptionsFrame(main_frame)
-        self.options_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=20)
+    def _setup_settings_tab(self):
+        """Setup the settings tab"""
+        # Settings tab frame
+        settings_frame = ttk.Frame(self.notebook, style='Modern.TFrame', padding=ModernStyle.PADDING_MD)
+        self.notebook.add(settings_frame, text=_("settings"))
         
-        # Control buttons
-        self.button_panel = ButtonPanel(main_frame)
-        self.button_panel.grid(row=4, column=0, pady=20)
+        settings_frame.columnconfigure(0, weight=1)
+        settings_frame.rowconfigure(2, weight=1)
+        
+        # Directory selection card
+        dir_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
+        dir_card.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        dir_card.columnconfigure(0, weight=1)
+        
+        dir_title = ModernWidget.create_title_label(dir_card, text=_("directory_selection"))
+        dir_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        
+        self.source_selector = DirectorySelector(dir_card, _("source_directory"), _("select_source"))
+        self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_SM))
+        
+        self.dest_selector = DirectorySelector(dir_card, _("destination_directory"), _("select_destination"))
+        self.dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E))
+        
+        # Options card
+        options_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
+        options_card.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        options_card.columnconfigure(0, weight=1)
+        
+        options_title = ModernWidget.create_title_label(options_card, text=_("options"))
+        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        
+        self.options_frame = OptionsFrame(options_card)
+        self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+    def _setup_execution_tab(self):
+        """Setup the execution tab"""
+        # Execution tab frame
+        exec_frame = ttk.Frame(self.notebook, style='Modern.TFrame', padding=ModernStyle.PADDING_MD)
+        self.notebook.add(exec_frame, text=_("execution"))
+        
+        exec_frame.columnconfigure(0, weight=1)
+        exec_frame.rowconfigure(2, weight=1)
+        
+        # Control panel card
+        control_card = ModernWidget.create_card_frame(exec_frame, padding=ModernStyle.PADDING_MD)
+        control_card.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        control_card.columnconfigure(1, weight=1)
+        
+        self.button_panel = ButtonPanel(control_card)
+        self.button_panel.grid(row=0, column=0, sticky=tk.W)
         
         # Progress display
-        self.progress_display = ProgressDisplay(main_frame)
-        self.progress_display.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=10)
+        progress_card = ModernWidget.create_card_frame(exec_frame, padding=ModernStyle.PADDING_MD)
+        progress_card.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        progress_card.columnconfigure(0, weight=1)
         
-        # Log display
-        self.log_display = LogDisplay(main_frame)
-        self.log_display.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+        progress_title = ModernWidget.create_title_label(progress_card, text=_("progress"))
+        progress_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        
+        self.progress_display = ProgressDisplay(progress_card)
+        self.progress_display.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+        # Log card
+        log_card = ModernWidget.create_card_frame(exec_frame, padding=ModernStyle.PADDING_MD)
+        log_card.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        log_card.columnconfigure(0, weight=1)
+        log_card.rowconfigure(1, weight=1)
+        
+        log_title = ModernWidget.create_title_label(log_card, text=_("log"))
+        log_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        
+        self.log_display = LogDisplay(log_card)
+        self.log_display.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
     
     def _setup_processor(self):
         """Setup the file processor and connect callbacks"""

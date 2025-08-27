@@ -74,6 +74,11 @@ translations = {
     "error_occurred": "An error occurred during processing: {}",
     "ready_status": "Ready",
     
+    # Tab Names
+    "settings": "Settings",
+    "execution": "Execution",
+    "directory_selection": "Directory Selection",
+    
     # Other Messages
     "dependency_warning": "Can continue, but date recognition accuracy may be affected",
     "select_directories": "Please select source and destination directories first",

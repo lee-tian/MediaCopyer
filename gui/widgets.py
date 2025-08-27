@@ -6,37 +6,44 @@ Custom widgets and UI components for Media Copyer GUI
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
 from .i18n import i18n, _, I18nMixin
+from .styles import ModernStyle, ModernWidget, configure_modern_style
 
 
 class DirectorySelector(ttk.Frame, I18nMixin):
-    """A frame containing an entry field and browse button for directory selection"""
+    """A modern directory selector with improved styling"""
     
     def __init__(self, parent, label_text, browse_title, **kwargs):
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, style='Surface.TFrame', **kwargs)
         
         self.directory_var = tk.StringVar()
         self.browse_title = browse_title
         self.label_text = label_text
         
-        # Setup the layout
+        # Setup the layout with better spacing
         self.columnconfigure(1, weight=1)
         
         # Store widget references for updating texts
         self._setup_widgets()
     
     def _setup_widgets(self):
-        """Setup the widgets"""
-        # Label
-        self.label = ttk.Label(self, text=self.label_text)
-        self.label.grid(row=0, column=0, sticky=tk.W, pady=5)
+        """Setup the modern widgets"""
+        # Create a container frame for better organization
+        container = ttk.Frame(self, style='Surface.TFrame')
+        container.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), 
+                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_SM)
+        container.columnconfigure(1, weight=1)
         
-        # Entry field
-        self.entry = ttk.Entry(self, textvariable=self.directory_var, width=50)
-        self.entry.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 5))
+        # Modern label
+        self.label = ModernWidget.create_title_label(container, self.label_text)
+        self.label.grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
         
-        # Browse button
-        self.browse_button = ttk.Button(self, text=_("browse"), command=self._on_browse)
-        self.browse_button.grid(row=0, column=2, pady=5)
+        # Modern entry field
+        self.entry = ModernWidget.create_modern_entry(container, textvariable=self.directory_var)
+        self.entry.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=(0, ModernStyle.PADDING_SM))
+        
+        # Modern browse button
+        self.browse_button = ModernWidget.create_secondary_button(container, _("browse"), command=self._on_browse)
+        self.browse_button.grid(row=1, column=1, sticky=tk.W)
     
     def _on_browse(self):
         """Open file dialog to select directory"""
@@ -61,29 +68,39 @@ class DirectorySelector(ttk.Frame, I18nMixin):
 
 
 class ProgressDisplay(ttk.Frame, I18nMixin):
-    """A frame containing progress bar and status label"""
+    """A modern progress display with enhanced styling"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, style='Surface.TFrame', **kwargs)
         
         self.progress_var = tk.StringVar()
         self.progress_var.set(_("ready_status"))
         self.percentage_var = tk.StringVar()
         self.percentage_var.set("")
         
-        # Setup the layout
+        # Setup the layout with modern spacing
         self.columnconfigure(0, weight=1)
         
-        # Progress bar - start in indeterminate mode
-        self.progress_bar = ttk.Progressbar(self, mode='indeterminate')
-        self.progress_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=5)
+        # Create container frame
+        container = ttk.Frame(self, style='Surface.TFrame')
+        container.grid(row=0, column=0, sticky=(tk.W, tk.E), 
+                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
+        container.columnconfigure(0, weight=1)
         
-        # Percentage label
-        self.percentage_label = ttk.Label(self, textvariable=self.percentage_var, font=('Arial', 8))
-        self.percentage_label.grid(row=1, column=0)
+        # Modern progress bar
+        self.progress_bar = ttk.Progressbar(container, mode='indeterminate',
+                                          style='Modern.Horizontal.TProgressbar')
+        self.progress_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), 
+                              pady=(0, ModernStyle.PADDING_SM))
         
-        # Status label
-        self.status_label = ttk.Label(self, textvariable=self.progress_var)
+        # Percentage label with modern styling
+        self.percentage_label = ttk.Label(container, textvariable=self.percentage_var,
+                                        style='Subtitle.TLabel')
+        self.percentage_label.grid(row=1, column=0, pady=(0, ModernStyle.PADDING_SM))
+        
+        # Status label with modern styling
+        self.status_label = ttk.Label(container, textvariable=self.progress_var,
+                                    style='Modern.TLabel')
         self.status_label.grid(row=2, column=0)
     
     def update_texts(self):
@@ -127,17 +144,31 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
 
 
 class LogDisplay(ttk.LabelFrame, I18nMixin):
-    """A scrollable text area for displaying log messages"""
+    """A modern scrollable text area for displaying log messages"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, text=_("processing_log"), padding="5", **kwargs)
+        super().__init__(parent, text=_("processing_log"), 
+                        style='Modern.TLabelframe', **kwargs)
         
         # Setup the layout
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         
-        # Scrollable text area
-        self.log_text = scrolledtext.ScrolledText(self, height=15, width=80)
+        # Create container with padding
+        container = ttk.Frame(self, style='Surface.TFrame')
+        container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), 
+                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
+        container.columnconfigure(0, weight=1)
+        container.rowconfigure(0, weight=1)
+        
+        # Compact scrollable text area
+        self.log_text = scrolledtext.ScrolledText(container, height=8, width=80,
+                                                 font=('Consolas', 9),
+                                                 bg=ModernStyle.SURFACE,
+                                                 fg=ModernStyle.TEXT_PRIMARY,
+                                                 selectbackground=ModernStyle.PRIMARY,
+                                                 relief='flat',
+                                                 borderwidth=1)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
     
     def update_texts(self):
@@ -159,18 +190,23 @@ class LogDisplay(ttk.LabelFrame, I18nMixin):
 
 
 class ButtonPanel(ttk.Frame, I18nMixin):
-    """A frame containing control buttons"""
+    """A modern frame containing control buttons"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, style='Surface.TFrame', **kwargs)
         
-        # Start processing button
-        self.start_button = ttk.Button(self, text=_("start_processing"))
-        self.start_button.grid(row=0, column=0, padx=5)
+        # Create container with modern spacing
+        container = ttk.Frame(self, style='Surface.TFrame')
+        container.grid(row=0, column=0, sticky=(tk.W, tk.E), 
+                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
         
-        # Clear log button
-        self.clear_log_button = ttk.Button(self, text=_("clear_log"))
-        self.clear_log_button.grid(row=0, column=1, padx=5)
+        # Modern start processing button (primary)
+        self.start_button = ModernWidget.create_modern_button(container, _("start_processing"))
+        self.start_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
+        
+        # Modern clear log button (secondary)
+        self.clear_log_button = ModernWidget.create_secondary_button(container, _("clear_log"))
+        self.clear_log_button.grid(row=0, column=1)
     
     def update_texts(self):
         """Update texts when language changes"""
