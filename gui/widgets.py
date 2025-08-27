@@ -123,14 +123,19 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
         """Set the progress bar to determinate mode and update percentage"""
         if total > 0:
             percentage = (current / total) * 100
-            # Switch to determinate mode if not already
-            if self.progress_bar.cget('mode') == 'indeterminate':
-                self.progress_bar.stop()
-                self.progress_bar.config(mode='determinate', maximum=100, value=0)
-            
-            # Update progress value and percentage display
-            self.progress_bar.config(value=percentage)
-            self.percentage_var.set(f"{percentage:.1f}% ({current}/{total})")
+            # Force stop any animation and reset to determinate mode
+            self.progress_bar.stop()
+            # Brief delay to ensure animation stops
+            self.progress_bar.after_idle(lambda: self._set_determinate_progress(percentage, current, total))
+    
+    def _set_determinate_progress(self, percentage, current, total):
+        """Helper method to set determinate progress after ensuring animation has stopped"""
+        # Configure as determinate mode with specific value
+        self.progress_bar.config(mode='determinate', maximum=100)
+        self.progress_bar['value'] = percentage
+        
+        # Update percentage display
+        self.percentage_var.set(f"{percentage:.1f}% ({current}/{total})")
     
     def set_status(self, status):
         """Set the status text"""
@@ -138,6 +143,7 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
     
     def reset_progress(self):
         """Reset progress bar to initial state"""
+        self.progress_bar.stop()
         self.progress_bar.config(mode='indeterminate', value=0)
         self.percentage_var.set("")
         self.progress_var.set(_("ready_status"))
