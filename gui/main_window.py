@@ -238,6 +238,7 @@ class MediaCopyerApp:
         
         # Connect button callbacks
         self.button_panel.set_start_command(self._start_processing)
+        self.button_panel.set_cancel_command(self.processor.cancel_processing)
         self.button_panel.set_clear_log_command(self._clear_log)
     
     def _check_dependencies(self):

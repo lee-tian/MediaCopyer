@@ -41,6 +41,7 @@ translations = {
     "clear_log": "Clear Log",
     "browse": "Browse",
     "start_processing": "Start Processing",
+    "cancel_processing": "Cancel",
     
     # Progress and Log
     "progress": "Progress",

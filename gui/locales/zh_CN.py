@@ -41,6 +41,7 @@ translations = {
     "clear_log": "清空日志",
     "browse": "浏览",
     "start_processing": "开始处理",
+    "cancel_processing": "取消",
     
     # Progress and Log
     "progress": "进度",
@@ -79,6 +80,8 @@ translations = {
     "serious_error": "发生严重错误: {}",
     "error_occurred": "处理过程中发生错误: {}",
     "ready_status": "就绪",
+    "canceling_operation": "正在取消操作...",
+    "operation_canceled": "操作已取消",
     
     # Tab Names
     "settings": "设置",

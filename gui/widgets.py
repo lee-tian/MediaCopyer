@@ -332,22 +332,36 @@ class ButtonPanel(ttk.Frame, I18nMixin):
         container.grid(row=0, column=0, sticky=(tk.W, tk.E), 
                       padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
         
-        # Modern start processing button (primary)
+        # Modern start/cancel processing button (primary)
         self.start_button = ModernWidget.create_modern_button(container, _("start_processing"))
         self.start_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
         # Modern clear log button (secondary)
         self.clear_log_button = ModernWidget.create_secondary_button(container, _("clear_log"))
         self.clear_log_button.grid(row=0, column=1)
+        
+        # Track current button mode
+        self.is_processing = False
+        self.start_command = None
+        self.cancel_command = None
     
     def update_texts(self):
         """Update texts when language changes"""
-        self.start_button.config(text=_("start_processing"))
+        if self.is_processing:
+            self.start_button.config(text=_("cancel_processing"))
+        else:
+            self.start_button.config(text=_("start_processing"))
         self.clear_log_button.config(text=_("clear_log"))
     
     def set_start_command(self, command):
         """Set the command for the start button"""
-        self.start_button.config(command=command)
+        self.start_command = command
+        if not self.is_processing:
+            self.start_button.config(command=command)
+    
+    def set_cancel_command(self, command):
+        """Set the command for the cancel button"""
+        self.cancel_command = command
     
     def set_clear_log_command(self, command):
         """Set the command for the clear log button"""
@@ -356,3 +370,17 @@ class ButtonPanel(ttk.Frame, I18nMixin):
     def set_start_button_state(self, state):
         """Enable or disable the start button"""
         self.start_button.config(state=state)
+    
+    def set_processing_mode(self, is_processing):
+        """Switch between start and cancel mode"""
+        self.is_processing = is_processing
+        if is_processing:
+            # 切换到取消模式
+            self.start_button.config(text=_("cancel_processing"), 
+                                   command=self.cancel_command,
+                                   state='normal')
+        else:
+            # 切换到开始处理模式
+            self.start_button.config(text=_("start_processing"), 
+                                   command=self.start_command,
+                                   state='normal')

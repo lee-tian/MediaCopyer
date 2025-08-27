@@ -19,6 +19,15 @@ class FileProcessor(I18nMixin):
         self.log_display = log_display
         self.button_panel = button_panel
         self.is_processing = False
+        self.cancel_requested = False
+        self.processing_thread = None
+    
+    def cancel_processing(self):
+        """Cancel the current processing operation"""
+        if self.is_processing and self.processing_thread:
+            self.cancel_requested = True
+            self.log_display.add_message(_("canceling_operation"))
+            self.log_display.update_display()
     
     def start_processing(self, source_dir, dest_dirs, move_mode, dry_run, md5_check, organization_mode):
         """Start the file processing in a separate thread"""
@@ -51,15 +60,17 @@ class FileProcessor(I18nMixin):
         
         # Start processing in a separate thread
         self.is_processing = True
-        self.button_panel.set_start_button_state('disabled')
+        self.cancel_requested = False
+        # 立即切换到取消模式
+        self.button_panel.set_processing_mode(True)
         self.progress_display.start_progress()
         
-        processing_thread = threading.Thread(
+        self.processing_thread = threading.Thread(
             target=self._process_files,
             args=(source_path, dest_paths, move_mode, dry_run, md5_check, organization_mode)
         )
-        processing_thread.daemon = True
-        processing_thread.start()
+        self.processing_thread.daemon = True
+        self.processing_thread.start()
     
     def _process_files(self, source_path, dest_paths, move_mode, dry_run, md5_check, organization_mode):
         """Process the media files using the core library"""
@@ -100,6 +111,12 @@ class FileProcessor(I18nMixin):
             
             # Process each destination directory
             for dest_index, dest_path in enumerate(dest_paths):
+                # Check if cancel was requested
+                if self.cancel_requested:
+                    self.log_display.add_message(_("operation_canceled"))
+                    self.progress_display.set_status(_("operation_canceled"))
+                    return
+                
                 self.log_display.add_message(f"\n{'='*30}")
                 self.log_display.add_message(f"处理目标目录 {dest_index + 1}/{len(dest_paths)}: {dest_path}")
                 self.log_display.add_message(f"{'='*30}")
@@ -108,6 +125,10 @@ class FileProcessor(I18nMixin):
                 # Define callback functions for this destination
                 def progress_callback(current, total, filename):
                     """Callback function for progress updates"""
+                    # Check for cancel request in callback
+                    if self.cancel_requested:
+                        return False  # Signal to core library to stop processing
+                    
                     # Calculate overall progress across all destinations
                     overall_current = (dest_index * len(media_files)) + current
                     overall_total = total_operations * len(media_files)
@@ -116,6 +137,7 @@ class FileProcessor(I18nMixin):
                     self.progress_display.set_status(f"目标 {dest_index + 1}/{total_operations}: {filename}")
                     self.log_display.add_message(_("processing_file").format(filename))
                     self.log_display.update_display()
+                    return True  # Continue processing
                 
                 def log_callback(message):
                     """Callback function for log messages"""
@@ -177,7 +199,8 @@ class FileProcessor(I18nMixin):
         finally:
             # Reset UI state
             self.is_processing = False
-            self.button_panel.set_start_button_state('normal')
+            # 处理完成或取消后，重新切换回开始处理模式
+            self.button_panel.set_processing_mode(False)
             self.progress_display.stop_progress()
             if not hasattr(self, '_processing_complete'):
                 self.progress_display.reset_progress()
