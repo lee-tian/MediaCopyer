@@ -28,6 +28,12 @@ translations = {
     "dry_run_mode": "试运行模式",
     "md5_verification": "MD5完整性校验",
     "processing_log": "处理日志",
+    "destination_directories": "目标目录列表",
+    "add_destination": "添加目录",
+    "remove_selected": "删除所选",
+    "destination": "目标",
+    "path": "路径",
+    "select_destination_directory": "选择目标目录",
     
     # Buttons
     "start": "开始处理",

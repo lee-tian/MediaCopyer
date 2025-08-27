@@ -8,7 +8,7 @@ from tkinter import ttk
 import os
 
 from core.utils import check_dependencies
-from .widgets import DirectorySelector, ProgressDisplay, LogDisplay, ButtonPanel
+from .widgets import DirectorySelector, MultiDestinationSelector, ProgressDisplay, LogDisplay, ButtonPanel
 from .options_frame import OptionsFrame
 from .processor import FileProcessor
 from .i18n import i18n, _, I18nMixin
@@ -20,14 +20,14 @@ class MediaCopyerApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1000x800")
+        self.root.geometry("1000x900")
         
         # Configure modern styling
         configure_modern_style()
         
         # Set window properties
         self.root.configure(bg=ModernStyle.BACKGROUND)
-        self.root.minsize(900, 700)
+        self.root.minsize(900, 800)
         
         # Set window icon if available
         self._set_window_icon()
@@ -148,8 +148,8 @@ class MediaCopyerApp:
         self.source_selector = DirectorySelector(dir_card, _("source_directory"), _("select_source"))
         self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_SM))
         
-        self.dest_selector = DirectorySelector(dir_card, _("destination_directory"), _("select_destination"))
-        self.dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E))
+        self.multi_dest_selector = MultiDestinationSelector(dir_card)
+        self.multi_dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E))
         
         # Options card
         options_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
@@ -227,7 +227,7 @@ class MediaCopyerApp:
         """Start the file processing"""
         self.processor.start_processing(
             source_dir=self.source_selector.get_directory(),
-            dest_dir=self.dest_selector.get_directory(),
+            dest_dirs=self.multi_dest_selector.get_destinations(),
             move_mode=self.options_frame.get_move_mode(),
             dry_run=self.options_frame.get_dry_run(),
             md5_check=self.options_frame.get_md5_check(),

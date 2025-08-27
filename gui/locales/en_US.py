@@ -28,6 +28,12 @@ translations = {
     "dry_run_mode": "Dry run mode",
     "md5_verification": "MD5 integrity verification",
     "processing_log": "Processing Log",
+    "destination_directories": "Destination Directories",
+    "add_destination": "Add Destination",
+    "remove_selected": "Remove Selected",
+    "destination": "Destination",
+    "path": "Path",
+    "select_destination_directory": "Select Destination Directory",
     
     # Buttons
     "start": "Start Processing",
