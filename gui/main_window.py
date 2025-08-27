@@ -5,6 +5,7 @@ Main application window for Media Copyer GUI
 
 import tkinter as tk
 from tkinter import ttk
+import os
 
 from core.utils import check_dependencies
 from .widgets import DirectorySelector, ProgressDisplay, LogDisplay, ButtonPanel
@@ -28,6 +29,9 @@ class MediaCopyerApp:
         self.root.configure(bg=ModernStyle.BACKGROUND)
         self.root.minsize(900, 700)
         
+        # Set window icon if available
+        self._set_window_icon()
+        
         # Subscribe to language changes
         i18n.add_observer(self._update_texts)
         
@@ -37,6 +41,39 @@ class MediaCopyerApp:
         
         # Set initial title
         self._update_title()
+    
+    def _set_window_icon(self):
+        """Set window icon if available"""
+        try:
+            icon_paths = [
+                'resources/icon.png',
+                'resources/icon.ico',
+                'icon.png',
+                'icon.ico'
+            ]
+            
+            for icon_path in icon_paths:
+                if os.path.exists(icon_path):
+                    if icon_path.endswith('.ico'):
+                        # For ICO files, use wm_iconbitmap
+                        self.root.wm_iconbitmap(icon_path)
+                    else:
+                        # For PNG files, use PhotoImage
+                        try:
+                            icon_image = tk.PhotoImage(file=icon_path)
+                            self.root.wm_iconphoto(True, icon_image)
+                            # Keep a reference to prevent garbage collection
+                            self.root.icon_image = icon_image
+                        except tk.TclError:
+                            # If PhotoImage fails, try with wm_iconbitmap anyway
+                            try:
+                                self.root.wm_iconbitmap(icon_path)
+                            except tk.TclError:
+                                pass
+                    break
+        except Exception:
+            # If setting icon fails, just continue without it
+            pass
     
     def _setup_ui(self):
         """Setup the tabbed user interface"""
