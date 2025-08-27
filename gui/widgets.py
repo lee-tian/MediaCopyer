@@ -167,8 +167,8 @@ class LogDisplay(ttk.LabelFrame, I18nMixin):
         container.columnconfigure(0, weight=1)
         container.rowconfigure(0, weight=1)
         
-        # Compact scrollable text area
-        self.log_text = scrolledtext.ScrolledText(container, height=8, width=80,
+        # Compact scrollable text area (reduced height for better space utilization)
+        self.log_text = scrolledtext.ScrolledText(container, height=6, width=80,
                                                  font=('Consolas', 9),
                                                  bg=ModernStyle.SURFACE,
                                                  fg=ModernStyle.TEXT_PRIMARY,
@@ -243,8 +243,8 @@ class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
         self.tree_frame.columnconfigure(0, weight=1)
         self.tree_frame.rowconfigure(0, weight=1)
         
-        # Treeview for destination list
-        self.tree = ttk.Treeview(self.tree_frame, columns=('path',), show='tree headings', height=6)
+        # Treeview for destination list (reduced height for better space utilization)
+        self.tree = ttk.Treeview(self.tree_frame, columns=('path',), show='tree headings', height=4)
         self.tree.heading('#0', text=_("destination"))
         self.tree.heading('path', text=_("path"))
         self.tree.column('#0', width=100, minwidth=80)

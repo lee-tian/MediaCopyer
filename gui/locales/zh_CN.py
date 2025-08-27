@@ -90,4 +90,12 @@ translations = {
     "select_directories": "请先选择源目录和目标目录",
     "invalid_source": "源目录不存在或不可访问",
     "invalid_destination": "目标目录不存在或不可访问",
+    
+    # Settings guidance
+    "setup_guidance": "请完成上方的目录选择和选项配置，然后点击开始执行按钮",
+    "setup_complete_guidance": "设置已完成！点击右侧按钮开始执行文件处理",
+    "go_to_execution": "开始执行",
+    
+    # Additional UI text
+    "dependency_warning": "警告：某些功能可能不可用"
 }

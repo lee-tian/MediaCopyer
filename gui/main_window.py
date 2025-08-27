@@ -20,7 +20,8 @@ class MediaCopyerApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1000x900")
+        self.root.geometry("1000x900")  # Reduced height for more compact interface
+        self.root.minsize(800, 650)     # Set minimum size to ensure usability
         
         # Configure modern styling
         configure_modern_style()
@@ -135,7 +136,7 @@ class MediaCopyerApp:
         self.notebook.add(settings_frame, text=_("settings"))
         
         settings_frame.columnconfigure(0, weight=1)
-        settings_frame.rowconfigure(2, weight=1)
+        settings_frame.rowconfigure(3, weight=1)
         
         # Directory selection card
         dir_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
@@ -161,6 +162,31 @@ class MediaCopyerApp:
         
         self.options_frame = OptionsFrame(options_card)
         self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
+        
+        # Next step guidance card
+        guidance_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
+        guidance_card.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        guidance_card.columnconfigure(1, weight=1)
+        
+        # Status icon
+        self.status_icon_label = ttk.Label(guidance_card, text="⏸", 
+                                          font=(ModernStyle.FONT_FAMILY, ModernStyle.FONT_SIZE_LG), 
+                                          style='Modern.TLabel')
+        self.status_icon_label.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_MD), sticky=tk.W)
+        
+        # Guidance text
+        self.guidance_text = ttk.Label(guidance_card, text=_("setup_guidance"), 
+                                      style='Modern.TLabel', wraplength=600)
+        self.guidance_text.grid(row=0, column=1, sticky=(tk.W, tk.E))
+        
+        # Next step button
+        self.next_step_button = ttk.Button(guidance_card, text=_("go_to_execution"), 
+                                          command=self._start_processing, 
+                                          style='Accent.TButton', state='disabled')
+        self.next_step_button.grid(row=0, column=2, padx=(ModernStyle.PADDING_MD, 0), sticky=tk.E)
+        
+        # Bind events to check settings completion
+        self._setup_settings_validation()
         
     def _setup_execution_tab(self):
         """Setup the execution tab"""
@@ -225,6 +251,10 @@ class MediaCopyerApp:
     
     def _start_processing(self):
         """Start the file processing"""
+        # First switch to the execution tab
+        self._go_to_execution_tab()
+        
+        # Then start processing
         self.processor.start_processing(
             source_dir=self.source_selector.get_directory(),
             dest_dirs=self.multi_dest_selector.get_destinations(),
@@ -237,6 +267,34 @@ class MediaCopyerApp:
     def _clear_log(self):
         """Clear the log display"""
         self.log_display.clear()
+    
+    def _setup_settings_validation(self):
+        """Setup validation for settings completion"""
+        # Check settings completion periodically
+        self.root.after(500, self._check_settings_completion)
+    
+    def _check_settings_completion(self):
+        """Check if all required settings are completed"""
+        source_dir = self.source_selector.get_directory()
+        dest_dirs = self.multi_dest_selector.get_destinations()
+        
+        is_complete = bool(source_dir and dest_dirs)
+        
+        if is_complete:
+            self.status_icon_label.config(text="✓", foreground="green")
+            self.guidance_text.config(text=_("setup_complete_guidance"))
+            self.next_step_button.config(state='normal')
+        else:
+            self.status_icon_label.config(text="⏸", foreground="orange")
+            self.guidance_text.config(text=_("setup_guidance"))
+            self.next_step_button.config(state='disabled')
+        
+        # Continue checking
+        self.root.after(1000, self._check_settings_completion)
+    
+    def _go_to_execution_tab(self):
+        """Switch to execution tab"""
+        self.notebook.select(1)  # Select the execution tab (index 1)
     
     def _on_language_change(self, event=None):
         """Handle language selection change"""

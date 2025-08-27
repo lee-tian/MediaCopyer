@@ -90,4 +90,12 @@ translations = {
     "select_directories": "Please select source and destination directories first",
     "invalid_source": "Source directory does not exist or is not accessible",
     "invalid_destination": "Destination directory does not exist or is not accessible",
+    
+    # Settings guidance
+    "setup_guidance": "Please complete the directory selection and options configuration above, then switch to the execution tab to start processing files",
+    "setup_complete_guidance": "Setup complete! Click the button on the right to switch to the execution tab and start processing files",
+    "go_to_execution": "Go to Execution",
+    
+    # Additional UI text
+    "dependency_warning": "Warning: Some features may be unavailable"
 }
