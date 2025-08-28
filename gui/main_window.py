@@ -282,13 +282,26 @@ class MediaCopyerApp:
     
     def _start_processing(self):
         """Start the file processing"""
+        # Get directories
+        source_dirs = self.source_selector.get_sources()
+        dest_dirs = self.multi_dest_selector.get_destinations()
+        
+        # Save last used directories if remember is enabled
+        from core.config import get_config
+        config = get_config()
+        if config.get_remember_last_dirs():
+            if source_dirs:
+                config.set_last_source_directories(source_dirs)
+            if dest_dirs:
+                config.set_last_destination_directories(dest_dirs)
+        
         # First switch to the execution tab
         self._go_to_execution_tab()
         
         # Then start processing
         self.processor.start_processing(
-            source_dirs=self.source_selector.get_sources(),
-            dest_dirs=self.multi_dest_selector.get_destinations(),
+            source_dirs=source_dirs,
+            dest_dirs=dest_dirs,
             move_mode=self.options_frame.get_move_mode(),
             dry_run=self.options_frame.get_dry_run(),
             md5_check=self.options_frame.get_md5_check(),

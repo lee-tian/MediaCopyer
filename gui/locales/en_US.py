@@ -33,8 +33,21 @@ translations = {
     "add_destination": "Add Destination",
     "remove_selected": "Remove Selected",
     "destination": "Destination",
+    "source": "Source",
     "path": "Path",
     "select_destination_directory": "Select Destination Directory",
+    "select_source_directory": "Select Source Directory",
+    
+    # Frequent Directories
+    "frequent_directories": "Frequent Directories",
+    "recent_directories": "Recent Directories",
+    "remember_last_dirs": "Remember last directories",
+    "frequent_sources": "Frequent Sources",
+    "frequent_destinations": "Frequent Destinations",
+    "clear_frequent": "Clear Frequent",
+    "use_selected": "Use Selected",
+    "add_to_frequent": "Add to Frequent",
+    "remove_from_frequent": "Remove from Frequent",
     
     # Buttons
     "start": "Start Processing",
@@ -88,7 +101,7 @@ translations = {
     "directory_selection": "Directory Selection",
     
     # Other Messages
-    "dependency_warning": "Can continue, but date recognition accuracy may be affected",
+    "dependency_warning": "Warning: Some features may be unavailable",
     "select_directories": "Please select source and destination directories first",
     "invalid_source": "Source directory does not exist or is not accessible",
     "invalid_destination": "Destination directory does not exist or is not accessible",
@@ -97,7 +110,4 @@ translations = {
     "setup_guidance": "Please complete the directory selection and options configuration above, then switch to the execution tab to start processing files",
     "setup_complete_guidance": "Setup complete! Click the button on the right to switch to the execution tab and start processing files",
     "go_to_execution": "Go to Execution",
-    
-    # Additional UI text
-    "dependency_warning": "Warning: Some features may be unavailable"
 }

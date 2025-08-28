@@ -7,23 +7,29 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
 from .i18n import i18n, _, I18nMixin
 from .styles import ModernStyle, ModernWidget, configure_modern_style
+from core.config import get_config
 
 
 class DirectorySelector(ttk.Frame, I18nMixin):
-    """A modern directory selector with improved styling"""
+    """A modern directory selector with improved styling and frequent directories"""
     
-    def __init__(self, parent, label_text, browse_title, **kwargs):
+    def __init__(self, parent, label_text, browse_title, selector_type='source', **kwargs):
         super().__init__(parent, style='Surface.TFrame', **kwargs)
         
         self.directory_var = tk.StringVar()
         self.browse_title = browse_title
         self.label_text = label_text
+        self.selector_type = selector_type  # 'source' or 'destination'
+        self.config = get_config()
         
         # Setup the layout with better spacing
         self.columnconfigure(1, weight=1)
         
         # Store widget references for updating texts
         self._setup_widgets()
+        
+        # Load last directory if remember is enabled
+        self._load_last_directory()
     
     def _setup_widgets(self):
         """Setup the modern widgets"""
@@ -35,21 +41,80 @@ class DirectorySelector(ttk.Frame, I18nMixin):
         
         # Modern label
         self.label = ModernWidget.create_title_label(container, self.label_text)
-        self.label.grid(row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        self.label.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        
+        # Row with entry, frequent dirs button, and browse button
+        entry_frame = ttk.Frame(container, style='Surface.TFrame')
+        entry_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E))
+        entry_frame.columnconfigure(0, weight=1)
         
         # Modern entry field
-        self.entry = ModernWidget.create_modern_entry(container, textvariable=self.directory_var)
-        self.entry.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=(0, ModernStyle.PADDING_SM))
+        self.entry = ModernWidget.create_modern_entry(entry_frame, textvariable=self.directory_var)
+        self.entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, ModernStyle.PADDING_SM))
+        
+        # Frequent directories button
+        self.frequent_button = ModernWidget.create_secondary_button(entry_frame, "★", 
+                                                                   command=self._show_frequent_menu)
+        self.frequent_button.grid(row=0, column=1, padx=(0, ModernStyle.PADDING_SM))
         
         # Modern browse button
-        self.browse_button = ModernWidget.create_secondary_button(container, _("browse"), command=self._on_browse)
-        self.browse_button.grid(row=1, column=1, sticky=tk.W)
+        self.browse_button = ModernWidget.create_secondary_button(entry_frame, _("browse"), 
+                                                                 command=self._on_browse)
+        self.browse_button.grid(row=0, column=2, sticky=tk.W)
+    
+    def _load_last_directory(self):
+        """Load the last used directory if remember is enabled"""
+        if self.config.get_remember_last_dirs():
+            if self.selector_type == 'source':
+                last_dirs = self.config.get_last_source_directories()
+            else:
+                last_dirs = self.config.get_last_destination_directories()
+            
+            if last_dirs:
+                self.directory_var.set(last_dirs[0])
+    
+    def _show_frequent_menu(self):
+        """Show menu with frequent directories"""
+        if self.selector_type == 'source':
+            frequent_dirs = self.config.get_frequent_source_directories()
+        else:
+            frequent_dirs = self.config.get_frequent_destination_directories()
+        
+        if not frequent_dirs:
+            return
+        
+        # Create popup menu
+        menu = tk.Menu(self, tearoff=0)
+        for directory in frequent_dirs:
+            # Truncate long paths for display
+            display_path = directory
+            if len(directory) > 50:
+                display_path = "..." + directory[-47:]
+            
+            menu.add_command(label=display_path, 
+                           command=lambda d=directory: self._select_frequent_directory(d))
+        
+        # Show menu at button location
+        try:
+            menu.tk_popup(self.frequent_button.winfo_rootx(), 
+                         self.frequent_button.winfo_rooty() + self.frequent_button.winfo_height())
+        finally:
+            menu.grab_release()
+    
+    def _select_frequent_directory(self, directory):
+        """Select a directory from frequent directories"""
+        self.directory_var.set(directory)
     
     def _on_browse(self):
         """Open file dialog to select directory"""
         directory = filedialog.askdirectory(title=self.browse_title)
         if directory:
             self.directory_var.set(directory)
+            # Add to frequent directories
+            if self.selector_type == 'source':
+                self.config.add_frequent_source_directory(directory)
+            else:
+                self.config.add_frequent_destination_directory(directory)
     
     def update_texts(self, label_text, browse_title):
         """Update texts when language changes"""
@@ -60,7 +125,14 @@ class DirectorySelector(ttk.Frame, I18nMixin):
     
     def get_directory(self):
         """Get the selected directory path"""
-        return self.directory_var.get()
+        directory = self.directory_var.get()
+        # Save as last used directory
+        if directory and self.config.get_remember_last_dirs():
+            if self.selector_type == 'source':
+                self.config.set_last_source_directories([directory])
+            else:
+                self.config.set_last_destination_directories([directory])
+        return directory
     
     def set_directory(self, path):
         """Set the directory path"""
@@ -207,6 +279,7 @@ class MultiSourceSelector(ttk.LabelFrame, I18nMixin):
         self.rowconfigure(1, weight=1)
         
         self.sources = []
+        self.config = get_config()
         
         # Create container with padding
         container = ttk.Frame(self, style='Surface.TFrame')
@@ -225,10 +298,15 @@ class MultiSourceSelector(ttk.LabelFrame, I18nMixin):
                                                            command=self._add_source)
         self.add_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
+        # Frequent directories button
+        self.frequent_button = ModernWidget.create_secondary_button(buttons_frame, "★", 
+                                                                   command=self._show_frequent_menu)
+        self.frequent_button.grid(row=0, column=1, padx=(0, ModernStyle.PADDING_SM))
+        
         # Remove selected button
         self.remove_button = ModernWidget.create_secondary_button(buttons_frame, _("remove_selected"), 
                                                                  command=self._remove_selected)
-        self.remove_button.grid(row=0, column=1)
+        self.remove_button.grid(row=0, column=2)
         self.remove_button.config(state='disabled')
         
         # Source list with scrollbar
@@ -260,12 +338,65 @@ class MultiSourceSelector(ttk.LabelFrame, I18nMixin):
         
         # Bind selection event
         self.tree.bind('<<TreeviewSelect>>', self._on_selection_change)
+        
+        # Load last directories after tree is created
+        self._load_last_directories()
+    
+    def _load_last_directories(self):
+        """Load the last used source directories if remember is enabled"""
+        if self.config.get_remember_last_dirs():
+            last_dirs = self.config.get_last_source_directories()
+            for directory in last_dirs:
+                if directory not in self.sources:
+                    self.sources.append(directory)
+                    # Add to tree view
+                    item_id = self.tree.insert('', 'end', text=f"{_('source')} {len(self.sources)}", 
+                                             values=(directory,))
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.sources else 'disabled')
+    
+    def _show_frequent_menu(self):
+        """Show menu with frequent source directories"""
+        frequent_dirs = self.config.get_frequent_source_directories()
+        
+        if not frequent_dirs:
+            return
+        
+        # Create popup menu
+        menu = tk.Menu(self, tearoff=0)
+        for directory in frequent_dirs:
+            # Truncate long paths for display
+            display_path = directory
+            if len(directory) > 50:
+                display_path = "..." + directory[-47:]
+            
+            menu.add_command(label=display_path, 
+                           command=lambda d=directory: self._add_frequent_source(d))
+        
+        # Show menu at button location
+        try:
+            menu.tk_popup(self.frequent_button.winfo_rootx(), 
+                         self.frequent_button.winfo_rooty() + self.frequent_button.winfo_height())
+        finally:
+            menu.grab_release()
+    
+    def _add_frequent_source(self, directory):
+        """Add a directory from frequent directories"""
+        if directory not in self.sources:
+            self.sources.append(directory)
+            # Add to tree view
+            item_id = self.tree.insert('', 'end', text=f"{_('source')} {len(self.sources)}", 
+                                     values=(directory,))
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.sources else 'disabled')
     
     def _add_source(self):
         """Add a new source directory"""
         directory = filedialog.askdirectory(title=_("select_source_directory"))
         if directory and directory not in self.sources:
             self.sources.append(directory)
+            # Add to frequent directories
+            self.config.add_frequent_source_directory(directory)
             # Add to tree view
             item_id = self.tree.insert('', 'end', text=f"{_('source')} {len(self.sources)}", 
                                      values=(directory,))
@@ -333,6 +464,7 @@ class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
         self.rowconfigure(1, weight=1)
         
         self.destinations = []
+        self.config = get_config()
         
         # Create container with padding
         container = ttk.Frame(self, style='Surface.TFrame')
@@ -351,10 +483,15 @@ class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
                                                            command=self._add_destination)
         self.add_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
+        # Frequent directories button
+        self.frequent_button = ModernWidget.create_secondary_button(buttons_frame, "★", 
+                                                                   command=self._show_frequent_menu)
+        self.frequent_button.grid(row=0, column=1, padx=(0, ModernStyle.PADDING_SM))
+        
         # Remove selected button
         self.remove_button = ModernWidget.create_secondary_button(buttons_frame, _("remove_selected"), 
                                                                  command=self._remove_selected)
-        self.remove_button.grid(row=0, column=1)
+        self.remove_button.grid(row=0, column=2)
         self.remove_button.config(state='disabled')
         
         # Destination list with scrollbar
@@ -386,12 +523,65 @@ class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
         
         # Bind selection event
         self.tree.bind('<<TreeviewSelect>>', self._on_selection_change)
+        
+        # Load last directories after tree is created
+        self._load_last_directories()
+    
+    def _load_last_directories(self):
+        """Load the last used destination directories if remember is enabled"""
+        if self.config.get_remember_last_dirs():
+            last_dirs = self.config.get_last_destination_directories()
+            for directory in last_dirs:
+                if directory not in self.destinations:
+                    self.destinations.append(directory)
+                    # Add to tree view
+                    item_id = self.tree.insert('', 'end', text=f"{_('destination')} {len(self.destinations)}", 
+                                             values=(directory,))
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.destinations else 'disabled')
+    
+    def _show_frequent_menu(self):
+        """Show menu with frequent destination directories"""
+        frequent_dirs = self.config.get_frequent_destination_directories()
+        
+        if not frequent_dirs:
+            return
+        
+        # Create popup menu
+        menu = tk.Menu(self, tearoff=0)
+        for directory in frequent_dirs:
+            # Truncate long paths for display
+            display_path = directory
+            if len(directory) > 50:
+                display_path = "..." + directory[-47:]
+            
+            menu.add_command(label=display_path, 
+                           command=lambda d=directory: self._add_frequent_destination(d))
+        
+        # Show menu at button location
+        try:
+            menu.tk_popup(self.frequent_button.winfo_rootx(), 
+                         self.frequent_button.winfo_rooty() + self.frequent_button.winfo_height())
+        finally:
+            menu.grab_release()
+    
+    def _add_frequent_destination(self, directory):
+        """Add a directory from frequent directories"""
+        if directory not in self.destinations:
+            self.destinations.append(directory)
+            # Add to tree view
+            item_id = self.tree.insert('', 'end', text=f"{_('destination')} {len(self.destinations)}", 
+                                     values=(directory,))
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.destinations else 'disabled')
     
     def _add_destination(self):
         """Add a new destination directory"""
         directory = filedialog.askdirectory(title=_("select_destination_directory"))
         if directory and directory not in self.destinations:
             self.destinations.append(directory)
+            # Add to frequent directories
+            self.config.add_frequent_destination_directory(directory)
             # Add to tree view
             item_id = self.tree.insert('', 'end', text=f"{_('destination')} {len(self.destinations)}", 
                                      values=(directory,))

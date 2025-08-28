@@ -34,8 +34,21 @@ translations = {
     "add_source": "添加源目录",
     "remove_selected": "删除所选",
     "destination": "目标",
+    "source": "源",
     "path": "路径",
     "select_destination_directory": "选择目标目录",
+    "select_source_directory": "选择源目录",
+    
+    # Frequent Directories
+    "frequent_directories": "常用目录",
+    "recent_directories": "最近目录", 
+    "remember_last_dirs": "记住上次目录",
+    "frequent_sources": "常用源目录",
+    "frequent_destinations": "常用目标目录",
+    "clear_frequent": "清空常用",
+    "use_selected": "使用选中",
+    "add_to_frequent": "添加到常用",
+    "remove_from_frequent": "从常用中移除",
     
     # Buttons
     "start": "开始处理",
