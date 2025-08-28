@@ -11,7 +11,7 @@ from core import organize_media_files, validate_directory, scan_directory
 from .i18n import i18n, _, I18nMixin
 
 
-class FileProcessor(I18nMixin):
+class FileProcessor:
     """Handles the file processing operations in a separate thread"""
     
     def __init__(self, progress_display, log_display):

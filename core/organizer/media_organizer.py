@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 import logging
 
-from .scanner import scan_directory
+from .scanner import scan_directory, scan_all_files
 from .file_operations import safe_copy, safe_move, handle_duplicate
 from .hash_utils import verify_file_integrity
-from ..metadata import extract_date_from_file
-from ..utils import format_date_path, sanitize_filename, create_directory_structure
+from ..metadata import get_file_date, get_file_type
+from ..utils import format_date_path, sanitize_filename, ensure_directory_exists
 
 
 class MediaOrganizer:
@@ -47,10 +47,13 @@ class MediaOrganizer:
             raise ValueError(f"Source directory does not exist: {source_dir}")
         
         # Create target directory structure
-        create_directory_structure(target_path)
+        ensure_directory_exists(target_path)
         
-        # Scan for media files
-        media_files = scan_directory(source_path)
+        # Scan for files - use different scanner based on organization method
+        if organize_by == 'extension':
+            media_files = scan_all_files(source_path)
+        else:
+            media_files = scan_directory(source_path)
         
         results = {
             'total_files': len(media_files),
@@ -65,6 +68,10 @@ class MediaOrganizer:
                 # Determine target path based on organization method
                 if organize_by == 'date':
                     target_file_path = self._get_date_based_path(
+                        file_path, target_path, file_type
+                    )
+                elif organize_by == 'extension':
+                    target_file_path = self._get_extension_based_path(
                         file_path, target_path, file_type
                     )
                 else:
@@ -105,7 +112,7 @@ class MediaOrganizer:
                            file_type: str) -> Path:
         """Generate date-based target path"""
         try:
-            file_date = extract_date_from_file(str(file_path))
+            file_date = get_file_date(str(file_path), file_type)
             date_path = format_date_path(file_date)
             safe_filename = sanitize_filename(file_path.name)
             return target_dir / date_path / safe_filename
@@ -127,3 +134,18 @@ class MediaOrganizer:
         """Generate type-based target path"""
         safe_filename = sanitize_filename(file_path.name)
         return target_dir / file_type / safe_filename
+    
+    def _get_extension_based_path(self, file_path: Path, target_dir: Path, 
+                                 file_type: str) -> Path:
+        """Generate extension-based target path organized by file extension"""
+        extension = file_path.suffix.lower()
+        if extension.startswith('.'):
+            extension = extension[1:]  # Remove the dot
+        
+        # Handle files without extensions
+        if not extension:
+            extension = 'no_extension'
+        
+        safe_filename = sanitize_filename(file_path.name)
+        # Organize directly by extension without media type classification
+        return target_dir / extension / safe_filename

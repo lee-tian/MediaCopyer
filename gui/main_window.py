@@ -35,6 +35,9 @@ class MediaCopyerApp:
         # Subscribe to language changes
         i18n.add_observer(self._update_texts)
         
+        # Set up cleanup when window is destroyed
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
+        
         self._setup_ui()
         self._setup_processor()
         self._check_dependencies()
@@ -185,8 +188,8 @@ class MediaCopyerApp:
         dir_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         dir_card.columnconfigure(0, weight=1)
         
-        dir_title = ModernWidget.create_title_label(dir_card, text=_("directory_selection"))
-        dir_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
+        self._dir_title_label = ModernWidget.create_title_label(dir_card, text=_("directory_selection"))
+        self._dir_title_label.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
         
         self.source_selector = MultiSourceSelector(dir_card)
         self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_XS))
@@ -220,8 +223,8 @@ class MediaCopyerApp:
         options_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         options_card.columnconfigure(0, weight=1)
         
-        options_title = ModernWidget.create_title_label(options_card, text=_("options"))
-        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
+        self._options_title_label = ModernWidget.create_title_label(options_card, text=_("options"))
+        self._options_title_label.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
         
         self.options_frame = OptionsFrame(options_card)
         self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
@@ -246,8 +249,8 @@ class MediaCopyerApp:
         progress_card.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
         progress_card.columnconfigure(0, weight=1)
         
-        progress_title = ModernWidget.create_title_label(progress_card, text=_("progress"))
-        progress_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        self._progress_title_label = ModernWidget.create_title_label(progress_card, text=_("progress"))
+        self._progress_title_label.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
         
         self.progress_display = ProgressDisplay(progress_card)
         self.progress_display.grid(row=1, column=0, sticky=(tk.W, tk.E))
@@ -258,8 +261,8 @@ class MediaCopyerApp:
         log_card.columnconfigure(0, weight=1)
         log_card.rowconfigure(1, weight=1)
         
-        log_title = ModernWidget.create_title_label(log_card, text=_("log"))
-        log_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        self._log_title_label = ModernWidget.create_title_label(log_card, text=_("log"))
+        self._log_title_label.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
         
         self.log_display = LogDisplay(log_card)
         self.log_display.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -349,6 +352,12 @@ class MediaCopyerApp:
         for code, display_text in languages.items():
             if display_text == selected_text:
                 i18n.set_language(code)
+                
+                # Also save to config if we have one
+                from core.config import get_config
+                config = get_config()
+                if config:
+                    config.set_language(code)
                 break
     
     def _update_title(self):
@@ -380,7 +389,10 @@ class MediaCopyerApp:
             self.notebook.tab(0, text=_("settings"))
             self.notebook.tab(1, text=_("execution"))
         
-        # Update card titles
+        # Update card titles directly by storing references
+        self._update_card_titles()
+        
+        # Update card contents
         if hasattr(self, 'source_selector'):
             self.source_selector.update_texts()
         if hasattr(self, 'multi_dest_selector'):
@@ -411,33 +423,31 @@ class MediaCopyerApp:
         
         if hasattr(self, 'next_step_button'):
             self.next_step_button.config(text=_("go_to_execution"))
-        
-        # Update other card titles by searching for title labels
-        for widget in self.root.winfo_children():
-            self._update_card_titles_recursive(widget)
     
-    def _update_card_titles_recursive(self, widget):
-        """Recursively update card title labels"""
-        try:
-            for child in widget.winfo_children():
-                if isinstance(child, ttk.Label):
-                    text = child.cget("text")
-                    # Update known title texts
-                    if "目录选择" in text or "Directory Selection" in text:
-                        child.config(text=_("directory_selection"))
-                    elif "选项" in text or "Options" in text:
-                        child.config(text=_("options"))
-                    elif "进度" in text or "Progress" in text:
-                        child.config(text=_("progress"))
-                    elif "日志" in text or "Log" in text:
-                        child.config(text=_("log"))
-                
-                # Recursively check children
-                if hasattr(child, 'winfo_children'):
-                    self._update_card_titles_recursive(child)
-        except tk.TclError:
-            # Widget may have been destroyed, ignore
-            pass
+    def _update_card_titles(self):
+        """Update card title labels using stored references"""
+        # Update directory selection title
+        if hasattr(self, '_dir_title_label'):
+            self._dir_title_label.config(text=_("directory_selection"))
+        
+        # Update options title
+        if hasattr(self, '_options_title_label'):
+            self._options_title_label.config(text=_("options"))
+        
+        # Update progress title
+        if hasattr(self, '_progress_title_label'):
+            self._progress_title_label.config(text=_("progress"))
+        
+        # Update log title
+        if hasattr(self, '_log_title_label'):
+            self._log_title_label.config(text=_("log"))
+    
+    def _on_closing(self):
+        """Handle window closing event"""
+        # Remove observer to prevent memory leaks
+        i18n.remove_observer(self._update_texts)
+        # Destroy the window
+        self.root.destroy()
 
 
 def create_app():

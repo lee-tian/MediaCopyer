@@ -3,6 +3,7 @@ String and filename related utility functions
 """
 
 import os
+from datetime import datetime
 
 
 def format_file_size(size_bytes: int) -> str:
@@ -57,3 +58,30 @@ def safe_filename(filename: str, replacement: str = '_') -> str:
         safe_name = name[:max_name_len] + ext
 
     return safe_name
+
+
+def format_date_path(file_date: datetime) -> str:
+    """
+    Format a date into a directory path structure (YYYY/MM/DD format)
+    
+    Args:
+        file_date: datetime object to format
+        
+    Returns:
+        String path in format "YYYY/MM/DD"
+    """
+    return f"{file_date.year:04d}/{file_date.month:02d}/{file_date.day:02d}"
+
+
+def sanitize_filename(filename: str, replacement: str = '_') -> str:
+    """
+    Alias for safe_filename for backward compatibility
+    
+    Args:
+        filename: Original filename
+        replacement: Character to replace invalid characters with
+        
+    Returns:
+        Safe filename
+    """
+    return safe_filename(filename, replacement)

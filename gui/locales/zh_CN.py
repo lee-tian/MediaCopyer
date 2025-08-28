@@ -22,9 +22,11 @@ translations = {
     "org_by_date": "按日期 (By Date): Video/2025/2025-07-25",
     "org_by_device": "按设备 (By Device): Video/2025/DJI",
     "org_by_date_device": "按日期+设备 (By Date+Device): Video/2025/2025-07-25/DJI",
+    "org_by_extension": "按文件后缀 (By Extension): Video/mp4, Photo/jpg",
     "org_mode_date": "按日期",
     "org_mode_device": "按设备", 
     "org_mode_date_device": "按日期+设备",
+    "org_mode_extension": "按文件后缀",
     "dry_run_mode": "试运行模式",
     "md5_verification": "MD5完整性校验",
     "processing_log": "处理日志",
@@ -115,5 +117,27 @@ translations = {
     "go_to_execution": "开始执行",
     
     # Additional UI text
-    "dependency_warning": "警告：某些功能可能不可用"
+    "dependency_warning": "警告：某些功能可能不可用",
+    
+    # Multi-destination processing messages
+    "source_dir_count": "源目录数量: {}",
+    "source_dir_number": "源目录 {}: {}",
+    "dest_dir_count": "目标目录数量: {}",
+    "dest_dir_number": "目标目录 {}: {}",
+    "processing_dest_dir": "处理目标目录 {}/{}: {}",
+    "processing_source_to_dest": "源 {}/{}: {}",
+    "source_to_dest_complete": "源 {} -> 目标 {} 完成:",
+    "photos_count": "  照片: {}",
+    "videos_count": "  视频: {}",
+    "errors_count_detail": "  错误: {}",
+    "total_count": "  总计: {}",
+    "source_to_dest_error": "源 {} -> 目标 {} 处理错误: {}",
+    "all_destinations_complete": "所有目标处理完成",
+    "total_photos": "总照片数: {}",
+    "total_videos": "总视频数: {}",
+    "total_errors": "总错误数: {}",
+    "total_processed": "总处理数: {}",
+    "dest_progress_status": "目标 {}/{}, 源 {}/{}: {}",
+    "success_multi_dest": "成功处理 {} 个文件到 {} 个目标目录",
+    "warning_multi_dest": "处理了 {} 个文件，但有 {} 个错误",
 }

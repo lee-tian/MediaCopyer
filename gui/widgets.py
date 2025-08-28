@@ -13,12 +13,13 @@ from core.config import get_config
 class DirectorySelector(ttk.Frame, I18nMixin):
     """A modern directory selector with improved styling and frequent directories"""
     
-    def __init__(self, parent, label_text, browse_title, selector_type='source', **kwargs):
-        super().__init__(parent, style='Surface.TFrame', **kwargs)
+    def __init__(self, parent, label_key, browse_title_key, selector_type='source', **kwargs):
+        ttk.Frame.__init__(self, parent, style='Surface.TFrame', **kwargs)
+        I18nMixin.__init__(self)
         
         self.directory_var = tk.StringVar()
-        self.browse_title = browse_title
-        self.label_text = label_text
+        self.browse_title_key = browse_title_key
+        self.label_key = label_key
         self.selector_type = selector_type  # 'source' or 'destination'
         self.config = get_config()
         
@@ -40,7 +41,7 @@ class DirectorySelector(ttk.Frame, I18nMixin):
         container.columnconfigure(1, weight=1)
         
         # Modern label
-        self.label = ModernWidget.create_title_label(container, self.label_text)
+        self.label = ModernWidget.create_title_label(container, _(self.label_key))
         self.label.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
         
         # Row with entry, frequent dirs button, and browse button
@@ -107,7 +108,7 @@ class DirectorySelector(ttk.Frame, I18nMixin):
     
     def _on_browse(self):
         """Open file dialog to select directory"""
-        directory = filedialog.askdirectory(title=self.browse_title)
+        directory = filedialog.askdirectory(title=_(self.browse_title_key))
         if directory:
             self.directory_var.set(directory)
             # Add to frequent directories
@@ -116,11 +117,10 @@ class DirectorySelector(ttk.Frame, I18nMixin):
             else:
                 self.config.add_frequent_destination_directory(directory)
     
-    def update_texts(self, label_text, browse_title):
+    def update_texts(self):
         """Update texts when language changes"""
-        self.label_text = label_text
-        self.browse_title = browse_title
-        self.label.config(text=label_text)
+        # Update the label with the translated text
+        self.label.config(text=_(self.label_key))
         self.browse_button.config(text=_("browse"))
     
     def get_directory(self):
@@ -143,7 +143,8 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
     """A modern progress display with enhanced styling"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, style='Surface.TFrame', **kwargs)
+        ttk.Frame.__init__(self, parent, style='Surface.TFrame', **kwargs)
+        I18nMixin.__init__(self)
         
         self.progress_var = tk.StringVar()
         self.progress_var.set(_("ready_status"))
@@ -178,7 +179,8 @@ class ProgressDisplay(ttk.Frame, I18nMixin):
     def update_texts(self):
         """Update texts when language changes"""
         # Update current status if it's still the default
-        if self.progress_var.get() in ["准备就绪", "Ready"]:
+        current_status = self.progress_var.get()
+        if current_status in ["准备就绪", "Ready"] or current_status == _("ready_status"):
             self.progress_var.set(_("ready_status"))
     
     def start_progress(self):
@@ -225,8 +227,9 @@ class LogDisplay(ttk.LabelFrame, I18nMixin):
     """A modern scrollable text area for displaying log messages"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, text=_("processing_log"), 
+        ttk.LabelFrame.__init__(self, parent, text=_("processing_log"), 
                         style='Modern.TLabelframe', **kwargs)
+        I18nMixin.__init__(self)
         
         # Setup the layout
         self.columnconfigure(0, weight=1)
@@ -271,8 +274,9 @@ class MultiSourceSelector(ttk.LabelFrame, I18nMixin):
     """A widget for selecting multiple source directories"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, text=_("source_directories"), 
+        ttk.LabelFrame.__init__(self, parent, text=_("source_directories"), 
                         style='Modern.TLabelframe', **kwargs)
+        I18nMixin.__init__(self)
         
         # Setup the layout
         self.columnconfigure(0, weight=1)
@@ -456,8 +460,9 @@ class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
     """A widget for selecting multiple destination directories"""
     
     def __init__(self, parent, **kwargs):
-        super().__init__(parent, text=_("destination_directories"), 
+        ttk.LabelFrame.__init__(self, parent, text=_("destination_directories"), 
                         style='Modern.TLabelframe', **kwargs)
+        I18nMixin.__init__(self)
         
         # Setup the layout
         self.columnconfigure(0, weight=1)
@@ -664,40 +669,25 @@ class ButtonPanel(ttk.Frame, I18nMixin):
     
     def update_texts(self):
         """Update texts when language changes"""
-        if self.is_processing:
-            self.start_button.config(text=_("cancel_processing"))
-        else:
-            self.start_button.config(text=_("start_processing"))
-        self.clear_log_button.config(text=_("clear_log"))
+        # Buttons were removed from this panel - no texts to update
+        pass
     
     def set_start_command(self, command):
-        """Set the command for the start button"""
+        """Set the command for the start button - no longer used"""
         self.start_command = command
-        if not self.is_processing:
-            self.start_button.config(command=command)
     
     def set_cancel_command(self, command):
-        """Set the command for the cancel button"""
+        """Set the command for the cancel button - no longer used"""
         self.cancel_command = command
     
     def set_clear_log_command(self, command):
-        """Set the command for the clear log button"""
-        self.clear_log_button.config(command=command)
+        """Set the command for the clear log button - no longer used"""
+        pass
     
     def set_start_button_state(self, state):
-        """Enable or disable the start button"""
-        self.start_button.config(state=state)
+        """Enable or disable the start button - no longer used"""
+        pass
     
     def set_processing_mode(self, is_processing):
-        """Switch between start and cancel mode"""
+        """Switch between start and cancel mode - no longer used"""
         self.is_processing = is_processing
-        if is_processing:
-            # 切换到取消模式
-            self.start_button.config(text=_("cancel_processing"), 
-                                   command=self.cancel_command,
-                                   state='normal')
-        else:
-            # 切换到开始处理模式
-            self.start_button.config(text=_("start_processing"), 
-                                   command=self.start_command,
-                                   state='normal')

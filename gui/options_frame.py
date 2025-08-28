@@ -109,7 +109,17 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
             value="date_device",
             style='Modern.TRadiobutton'
         )
-        self._widgets['mode_date_device'].grid(row=3, column=0, sticky=tk.W)
+        self._widgets['mode_date_device'].grid(row=3, column=0, sticky=tk.W,
+                                              pady=(0, ModernStyle.PADDING_XS))
+        
+        self._widgets['mode_extension'] = ttk.Radiobutton(
+            org_frame, 
+            text=_("org_mode_extension"), 
+            variable=self.organization_mode, 
+            value="extension",
+            style='Modern.TRadiobutton'
+        )
+        self._widgets['mode_extension'].grid(row=4, column=0, sticky=tk.W)
     
     def update_texts(self):
         """Update all UI texts when language changes"""
@@ -125,6 +135,7 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
             self._widgets['mode_date'].config(text=_("org_mode_date"))
             self._widgets['mode_device'].config(text=_("org_mode_device"))
             self._widgets['mode_date_device'].config(text=_("org_mode_date_device"))
+            self._widgets['mode_extension'].config(text=_("org_mode_extension"))
     
     def get_move_mode(self):
         """Get the move mode setting"""

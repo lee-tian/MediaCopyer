@@ -15,7 +15,7 @@ class I18nManager:
     """Internationalization manager for handling multiple languages"""
     
     def __init__(self):
-        self.current_language = "zh_CN"  # Default to Chinese
+        self.current_language = "en_US"  # Default to English
         self.languages = {}
         self.observers = []  # List of callbacks to notify when language changes
         self._load_languages()
@@ -139,6 +139,10 @@ class I18nMixin:
         """Update all i18n texts when language changes"""
         for attribute, key in self._i18n_keys.items():
             self._update_attribute_text(attribute, key)
+        
+        # Also call the widget's update_texts method if it exists
+        if hasattr(self, 'update_texts'):
+            self.update_texts()
     
     def destroy(self):
         """Clean up i18n observer when widget is destroyed"""

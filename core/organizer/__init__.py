@@ -50,6 +50,25 @@ def scan_directory(source_dir: Path) -> List[Tuple[Path, str]]:
     return media_files
 
 
+def scan_all_files(source_dir: Path) -> List[Tuple[Path, str]]:
+    """Recursively scan directory for all files (for extension-based organization)"""
+    all_files = []
+    
+    for root, dirs, files in os.walk(source_dir):
+        for file in files:
+            file_path = Path(root) / file
+            # Skip hidden files and system files
+            if not file.startswith('.'):
+                file_type = get_file_type(str(file_path))
+                # For extension mode, we still track if it's a known media type
+                # but include all files
+                if not file_type:
+                    file_type = 'other'  # Mark as other file type
+                all_files.append((file_path, file_type))
+    
+    return all_files
+
+
 def generate_unique_filename(target_path: Path) -> Path:
     """Generate a unique filename if file already exists"""
     if not target_path.exists():
@@ -74,26 +93,37 @@ def get_target_directory(dest_path: Path, file_path: Path, file_type: str,
     year = file_date.strftime('%Y')
     date_str = file_date.strftime('%Y-%m-%d')
     
-    # Determine base type directory
-    if file_type == 'photo':
-        base_dir = dest_path / 'Picture'
-    else:  # video
-        base_dir = dest_path / 'Video'
-    
-    if organization_mode == "date":
-        # Mode 1: Video/2025/2025-07-25
-        target_dir = base_dir / year / date_str
-    elif organization_mode == "device":
-        # Mode 2: Video/2025/DJI
-        device_name = get_device_name(str(file_path), file_type)
-        target_dir = base_dir / year / device_name
-    elif organization_mode == "date_device":
-        # Mode 3: Video/2025/2025-07-25/DJI
-        device_name = get_device_name(str(file_path), file_type)
-        target_dir = base_dir / year / date_str / device_name
+    if organization_mode == "extension":
+        # Mode 4: Extension-based organization
+        extension = file_path.suffix.lower()
+        if not extension:
+            extension = 'no_extension'
+        else:
+            extension = extension[1:]  # Remove the dot
+        target_dir = dest_path / extension.upper()
     else:
-        # Default to date mode if unknown mode
-        target_dir = base_dir / year / date_str
+        # For other modes, determine base type directory
+        if file_type == 'photo':
+            base_dir = dest_path / 'Picture'
+        elif file_type == 'video':
+            base_dir = dest_path / 'Video'
+        else:  # other file type
+            base_dir = dest_path / 'Other'
+        
+        if organization_mode == "date":
+            # Mode 1: Video/2025/2025-07-25
+            target_dir = base_dir / year / date_str
+        elif organization_mode == "device":
+            # Mode 2: Video/2025/DJI
+            device_name = get_device_name(str(file_path), file_type)
+            target_dir = base_dir / year / device_name
+        elif organization_mode == "date_device":
+            # Mode 3: Video/2025/2025-07-25/DJI
+            device_name = get_device_name(str(file_path), file_type)
+            target_dir = base_dir / year / date_str / device_name
+        else:
+            # Default to date mode if unknown mode
+            target_dir = base_dir / year / date_str
     
     return target_dir
 
@@ -207,41 +237,48 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         dest_dir: Destination directory for organized files
         move_mode: Move files instead of copying
         dry_run: Preview mode, don't actually move/copy files
-        organization_mode: Organization mode ('date', 'device', 'date_device')
+        organization_mode: Organization mode ('date', 'device', 'date_device', 'extension')
         verify_md5: Whether to verify file integrity using MD5 checksums
         progress_callback: Callback function for progress updates
         
     Returns:
         dict: Statistics and results
     """
-    # Scan for media files
-    media_files = scan_directory(source_dir)
+    # Scan for files based on organization mode
+    if organization_mode == "extension":
+        # For extension mode, scan all files
+        files_to_process = scan_all_files(source_dir)
+    else:
+        # For other modes, scan only media files
+        files_to_process = scan_directory(source_dir)
     
-    if not media_files:
+    if not files_to_process:
         return {
             'total_files': 0,
             'processed': 0,
             'photos': 0,
             'videos': 0,
+            'other': 0,
             'errors': 0,
             'devices': set(),
             'results': []
         }
     
     stats = {
-        'total_files': len(media_files),
+        'total_files': len(files_to_process),
         'processed': 0,
         'photos': 0,
         'videos': 0,
+        'other': 0,
         'errors': 0,
         'devices': set(),
         'results': []
     }
     
-    for i, (file_path, file_type) in enumerate(media_files):
+    for i, (file_path, file_type) in enumerate(files_to_process):
         # Update progress if callback provided
         if progress_callback:
-            progress_callback(i + 1, len(media_files), file_path.name)
+            progress_callback(i + 1, len(files_to_process), file_path.name)
         
         # Organize the file
         result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode, verify_md5)
@@ -252,8 +289,10 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
             stats['processed'] += 1
             if file_type == 'photo':
                 stats['photos'] += 1
-            else:
+            elif file_type == 'video':
                 stats['videos'] += 1
+            else:
+                stats['other'] += 1
             
             if result['device_name']:
                 stats['devices'].add(result['device_name'])

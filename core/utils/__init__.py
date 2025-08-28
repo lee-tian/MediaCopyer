@@ -20,7 +20,9 @@ from .filesystem import (
 # Import string utilities
 from .string_utils import (
     format_file_size,
-    safe_filename
+    safe_filename,
+    format_date_path,
+    sanitize_filename
 )
 
 # System and dependency checks
@@ -75,6 +77,8 @@ __all__ = [
     # String utilities
     'format_file_size',
     'safe_filename',
+    'format_date_path',
+    'sanitize_filename',
     # System checks
     'check_dependencies'
 ]
