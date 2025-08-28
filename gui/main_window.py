@@ -8,7 +8,7 @@ from tkinter import ttk
 import os
 
 from core.utils import check_dependencies
-from .widgets import DirectorySelector, MultiDestinationSelector, ProgressDisplay, LogDisplay, ButtonPanel
+from .widgets import DirectorySelector, MultiDestinationSelector, ProgressDisplay, LogDisplay
 from .options_frame import OptionsFrame
 from .processor import FileProcessor
 from .i18n import i18n, _, I18nMixin
@@ -197,14 +197,6 @@ class MediaCopyerApp:
         exec_frame.columnconfigure(0, weight=1)
         exec_frame.rowconfigure(2, weight=1)
         
-        # Control panel card
-        control_card = ModernWidget.create_card_frame(exec_frame, padding=ModernStyle.PADDING_MD)
-        control_card.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
-        control_card.columnconfigure(1, weight=1)
-        
-        self.button_panel = ButtonPanel(control_card)
-        self.button_panel.grid(row=0, column=0, sticky=tk.W)
-        
         # Progress display
         progress_card = ModernWidget.create_card_frame(exec_frame, padding=ModernStyle.PADDING_MD)
         progress_card.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
@@ -232,14 +224,8 @@ class MediaCopyerApp:
         """Setup the file processor and connect callbacks"""
         self.processor = FileProcessor(
             self.progress_display, 
-            self.log_display, 
-            self.button_panel
+            self.log_display
         )
-        
-        # Connect button callbacks
-        self.button_panel.set_start_command(self._start_processing)
-        self.button_panel.set_cancel_command(self.processor.cancel_processing)
-        self.button_panel.set_clear_log_command(self._clear_log)
     
     def _check_dependencies(self):
         """Check if required dependencies are available"""
@@ -336,10 +322,6 @@ class MediaCopyerApp:
         # Update options frame
         if hasattr(self, 'options_frame'):
             self.options_frame.update_texts()
-        
-        # Update button panel
-        if hasattr(self, 'button_panel'):
-            self.button_panel.update_texts()
         
         # Update progress display
         if hasattr(self, 'progress_display'):

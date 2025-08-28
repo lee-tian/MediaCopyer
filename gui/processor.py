@@ -14,10 +14,9 @@ from .i18n import i18n, _, I18nMixin
 class FileProcessor(I18nMixin):
     """Handles the file processing operations in a separate thread"""
     
-    def __init__(self, progress_display, log_display, button_panel):
+    def __init__(self, progress_display, log_display):
         self.progress_display = progress_display
         self.log_display = log_display
-        self.button_panel = button_panel
         self.is_processing = False
         self.cancel_requested = False
         self.processing_thread = None
@@ -61,8 +60,6 @@ class FileProcessor(I18nMixin):
         # Start processing in a separate thread
         self.is_processing = True
         self.cancel_requested = False
-        # 立即切换到取消模式
-        self.button_panel.set_processing_mode(True)
         self.progress_display.start_progress()
         
         self.processing_thread = threading.Thread(
@@ -199,8 +196,6 @@ class FileProcessor(I18nMixin):
         finally:
             # Reset UI state
             self.is_processing = False
-            # 处理完成或取消后，重新切换回开始处理模式
-            self.button_panel.set_processing_mode(False)
             self.progress_display.stop_progress()
             if not hasattr(self, '_processing_complete'):
                 self.progress_display.reset_progress()

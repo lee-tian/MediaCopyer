@@ -332,13 +332,14 @@ class ButtonPanel(ttk.Frame, I18nMixin):
         container.grid(row=0, column=0, sticky=(tk.W, tk.E), 
                       padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
         
-        # Modern start/cancel processing button (primary)
-        self.start_button = ModernWidget.create_modern_button(container, _("start_processing"))
-        self.start_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
+        # Buttons have been removed as requested
+        # Modern start/cancel processing button (primary) - REMOVED
+        # self.start_button = ModernWidget.create_modern_button(container, _("start_processing"))
+        # self.start_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
-        # Modern clear log button (secondary)
-        self.clear_log_button = ModernWidget.create_secondary_button(container, _("clear_log"))
-        self.clear_log_button.grid(row=0, column=1)
+        # Modern clear log button (secondary) - REMOVED
+        # self.clear_log_button = ModernWidget.create_secondary_button(container, _("clear_log"))
+        # self.clear_log_button.grid(row=0, column=1)
         
         # Track current button mode
         self.is_processing = False
