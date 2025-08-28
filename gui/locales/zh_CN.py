@@ -7,7 +7,7 @@ translations = {
     # Main Window
     "app_title": "Media Copyer - 媒体文件整理工具",
     "main_title": "Media Copyer - 媒体文件整理工具",
-    "language": "语言",
+    "language": "语言/language",
     "source_directory": "源目录 (Source Directory):",
     "destination_directory": "目标目录 (Destination Directory):",
     "select_source": "选择源目录",
@@ -15,10 +15,10 @@ translations = {
     
     # Options Frame
     "options": "选项",
-    "move_mode": "移动模式 (Move files instead of copy)",
+    "move_mode": "移动模式 (删除源目录文件)",
     "dry_run": "试运行模式 (Dry run - preview only)",
     "md5_check": "MD5完整性校验 (MD5 integrity verification)",
-    "organization_mode": "组织方式 (Organization Mode):",
+    "organization_mode": "组织方式 (Organization Mode)",
     "org_by_date": "按日期 (By Date): Video/2025/2025-07-25",
     "org_by_device": "按设备 (By Device): Video/2025/DJI",
     "org_by_date_device": "按日期+设备 (By Date+Device): Video/2025/2025-07-25/DJI",
@@ -28,8 +28,10 @@ translations = {
     "dry_run_mode": "试运行模式",
     "md5_verification": "MD5完整性校验",
     "processing_log": "处理日志",
+    "source_directories": "源目录列表",
     "destination_directories": "目标目录列表",
     "add_destination": "添加目录",
+    "add_source": "添加源目录",
     "remove_selected": "删除所选",
     "destination": "目标",
     "path": "路径",

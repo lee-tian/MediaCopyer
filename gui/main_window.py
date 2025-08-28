@@ -351,18 +351,28 @@ class MediaCopyerApp:
         # Update title label
         self.title_label.config(text=_("main_title"))
         
-        # Update language selector components
-        for child in self.title_label.master.grid_slaves():
+        # Update language selector label
+        lang_frame = None
+        for child in self.title_label.master.winfo_children():
             if isinstance(child, ttk.Frame):
-                for subchild in child.grid_slaves():
-                    if isinstance(subchild, ttk.Label) and ":" in subchild.cget("text"):
-                        subchild.config(text=_("language") + ":")
+                lang_frame = child
+                break
         
-        # Update directory selectors
+        if lang_frame:
+            for widget in lang_frame.winfo_children():
+                if isinstance(widget, ttk.Label) and ":" in widget.cget("text"):
+                    widget.config(text=_("language") + ":")
+        
+        # Update notebook tab titles
+        if hasattr(self, 'notebook'):
+            self.notebook.tab(0, text=_("settings"))
+            self.notebook.tab(1, text=_("execution"))
+        
+        # Update card titles
         if hasattr(self, 'source_selector'):
-            self.source_selector.update_texts(_("source_directory"), _("select_source"))
-        if hasattr(self, 'dest_selector'):
-            self.dest_selector.update_texts(_("destination_directory"), _("select_destination"))
+            self.source_selector.update_texts()
+        if hasattr(self, 'multi_dest_selector'):
+            self.multi_dest_selector.update_texts()
         
         # Update options frame
         if hasattr(self, 'options_frame'):
@@ -375,6 +385,47 @@ class MediaCopyerApp:
         # Update log display
         if hasattr(self, 'log_display'):
             self.log_display.update_texts()
+        
+        # Update guidance text and button
+        if hasattr(self, 'guidance_text'):
+            source_dirs = self.source_selector.get_sources() if hasattr(self, 'source_selector') else []
+            dest_dirs = self.multi_dest_selector.get_destinations() if hasattr(self, 'multi_dest_selector') else []
+            is_complete = bool(source_dirs and dest_dirs)
+            
+            if is_complete:
+                self.guidance_text.config(text=_("setup_complete_guidance"))
+            else:
+                self.guidance_text.config(text=_("setup_guidance"))
+        
+        if hasattr(self, 'next_step_button'):
+            self.next_step_button.config(text=_("go_to_execution"))
+        
+        # Update other card titles by searching for title labels
+        for widget in self.root.winfo_children():
+            self._update_card_titles_recursive(widget)
+    
+    def _update_card_titles_recursive(self, widget):
+        """Recursively update card title labels"""
+        try:
+            for child in widget.winfo_children():
+                if isinstance(child, ttk.Label):
+                    text = child.cget("text")
+                    # Update known title texts
+                    if "目录选择" in text or "Directory Selection" in text:
+                        child.config(text=_("directory_selection"))
+                    elif "选项" in text or "Options" in text:
+                        child.config(text=_("options"))
+                    elif "进度" in text or "Progress" in text:
+                        child.config(text=_("progress"))
+                    elif "日志" in text or "Log" in text:
+                        child.config(text=_("log"))
+                
+                # Recursively check children
+                if hasattr(child, 'winfo_children'):
+                    self._update_card_titles_recursive(child)
+        except tk.TclError:
+            # Widget may have been destroyed, ignore
+            pass
 
 
 def create_app():
