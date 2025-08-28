@@ -28,85 +28,88 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
         self._setup_options()
     
     def _setup_options(self):
-        """Setup all the option widgets with modern styling"""
-        # Create container with modern padding
+        """Setup all the option widgets with compact modern styling"""
+        # Create container with reduced padding for compact layout
         container = ttk.Frame(self, style='Surface.TFrame')
         container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), 
-                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
+                      padx=ModernStyle.PADDING_SM, pady=ModernStyle.PADDING_SM)
         container.columnconfigure(0, weight=1)
+        container.columnconfigure(1, weight=1)
         
-        # Move mode checkbox with modern style
+        # Left column for checkboxes
+        checkbox_frame = ttk.Frame(container, style='Surface.TFrame')
+        checkbox_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N), 
+                           padx=(0, ModernStyle.PADDING_MD))
+        
+        # Move mode checkbox with compact style
         self._widgets['move_mode'] = ttk.Checkbutton(
-            container, 
+            checkbox_frame, 
             text=_("move_mode"), 
             variable=self.move_mode,
             style='Modern.TCheckbutton'
         )
         self._widgets['move_mode'].grid(row=0, column=0, sticky=tk.W, 
-                                       pady=(0, ModernStyle.PADDING_SM))
+                                       pady=(0, ModernStyle.PADDING_XS))
         
-        # Dry run checkbox with modern style
+        # Dry run checkbox with compact style
         self._widgets['dry_run'] = ttk.Checkbutton(
-            container, 
+            checkbox_frame, 
             text=_("dry_run_mode"), 
             variable=self.dry_run,
             style='Modern.TCheckbutton'
         )
         self._widgets['dry_run'].grid(row=1, column=0, sticky=tk.W,
-                                     pady=(0, ModernStyle.PADDING_SM))
+                                     pady=(0, ModernStyle.PADDING_XS))
         
-        # MD5 integrity check checkbox with modern style
+        # MD5 integrity check checkbox with compact style
         self._widgets['md5_check'] = ttk.Checkbutton(
-            container, 
+            checkbox_frame, 
             text=_("md5_verification"), 
             variable=self.md5_check,
             style='Modern.TCheckbutton'
         )
-        self._widgets['md5_check'].grid(row=2, column=0, sticky=tk.W,
-                                       pady=(0, ModernStyle.PADDING_MD))
+        self._widgets['md5_check'].grid(row=2, column=0, sticky=tk.W)
         
-        # Organization mode selection with modern styling
-        self._widgets['org_mode_label'] = ttk.Label(container, 
+        # Right column for organization mode
+        org_frame = ttk.Frame(container, style='Surface.TFrame')
+        org_frame.grid(row=0, column=1, sticky=(tk.W, tk.E, tk.N))
+        
+        # Organization mode selection with compact styling
+        self._widgets['org_mode_label'] = ttk.Label(org_frame, 
                                                   text=_("organization_mode") + ":",
                                                   style='Subtitle.TLabel')
-        self._widgets['org_mode_label'].grid(row=3, column=0, sticky=tk.W, 
-                                          pady=(ModernStyle.PADDING_MD, ModernStyle.PADDING_SM))
+        self._widgets['org_mode_label'].grid(row=0, column=0, sticky=tk.W, 
+                                          pady=(0, ModernStyle.PADDING_XS))
         
-        # Modern frame for radio buttons
-        mode_frame = ttk.Frame(container, style='Surface.TFrame')
-        mode_frame.grid(row=4, column=0, sticky=tk.W, 
-                       padx=(ModernStyle.PADDING_LG, 0),
-                       pady=(0, ModernStyle.PADDING_SM))
-        
-        # Organization mode radio buttons with modern styling
+        # Organization mode radio buttons with compact styling
         self._widgets['mode_date'] = ttk.Radiobutton(
-            mode_frame, 
+            org_frame, 
             text=_("org_mode_date"), 
             variable=self.organization_mode, 
             value="date",
             style='Modern.TRadiobutton'
         )
-        self._widgets['mode_date'].grid(row=0, column=0, sticky=tk.W,
+        self._widgets['mode_date'].grid(row=1, column=0, sticky=tk.W,
                                        pady=(0, ModernStyle.PADDING_XS))
         
         self._widgets['mode_device'] = ttk.Radiobutton(
-            mode_frame, 
+            org_frame, 
             text=_("org_mode_device"), 
             variable=self.organization_mode, 
             value="device",
             style='Modern.TRadiobutton'
         )
-        self._widgets['mode_device'].grid(row=1, column=0, sticky=tk.W,
+        self._widgets['mode_device'].grid(row=2, column=0, sticky=tk.W,
                                          pady=(0, ModernStyle.PADDING_XS))
         
         self._widgets['mode_date_device'] = ttk.Radiobutton(
-            mode_frame, 
+            org_frame, 
             text=_("org_mode_date_device"), 
             variable=self.organization_mode, 
             value="date_device",
             style='Modern.TRadiobutton'
         )
-        self._widgets['mode_date_device'].grid(row=2, column=0, sticky=tk.W)
+        self._widgets['mode_date_device'].grid(row=3, column=0, sticky=tk.W)
     
     def update_texts(self):
         """Update all UI texts when language changes"""

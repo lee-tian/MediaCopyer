@@ -20,15 +20,14 @@ class MediaCopyerApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1000x900")  # Reduced height for more compact interface
-        self.root.minsize(800, 650)     # Set minimum size to ensure usability
+        self.root.geometry("900x700")   # More reasonable size for various screens
+        self.root.minsize(800, 600)     # Minimum size to ensure all content fits
         
         # Configure modern styling
         configure_modern_style()
         
         # Set window properties
         self.root.configure(bg=ModernStyle.BACKGROUND)
-        self.root.minsize(900, 800)
         
         # Set window icon if available
         self._set_window_icon()
@@ -130,60 +129,106 @@ class MediaCopyerApp:
         self._setup_execution_tab()
         
     def _setup_settings_tab(self):
-        """Setup the settings tab"""
-        # Settings tab frame
-        settings_frame = ttk.Frame(self.notebook, style='Modern.TFrame', padding=ModernStyle.PADDING_MD)
-        self.notebook.add(settings_frame, text=_("settings"))
+        """Setup the settings tab with scrollable content"""
+        # Settings tab container
+        settings_container = ttk.Frame(self.notebook, style='Modern.TFrame')
+        self.notebook.add(settings_container, text=_("settings"))
         
-        settings_frame.columnconfigure(0, weight=1)
-        settings_frame.rowconfigure(3, weight=1)
+        # Create canvas and scrollbar for scrollable content
+        canvas = tk.Canvas(settings_container, bg=ModernStyle.BACKGROUND, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(settings_container, orient="vertical", command=canvas.yview)
         
-        # Directory selection card
-        dir_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
-        dir_card.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        # Scrollable frame inside canvas
+        scrollable_frame = ttk.Frame(canvas, style='Modern.TFrame')
+        
+        # Configure scrolling
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        # Pack canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Configure canvas scrolling with mouse wheel
+        def _bound_to_mousewheel(event):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        def _unbound_to_mousewheel(event):
+            canvas.unbind_all("<MouseWheel>")
+        
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind('<Enter>', _bound_to_mousewheel)
+        canvas.bind('<Leave>', _unbound_to_mousewheel)
+        
+        # Configure scrollable frame
+        def configure_scroll_region(event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            
+        def configure_canvas_width(event=None):
+            # Set the width of the scrollable frame to match canvas width
+            canvas_width = event.width
+            canvas.itemconfig(canvas_window, width=canvas_width)
+        
+        scrollable_frame.bind('<Configure>', configure_scroll_region)
+        canvas.bind('<Configure>', configure_canvas_width)
+        
+        # Add content to scrollable frame with reduced padding
+        content_frame = ttk.Frame(scrollable_frame, style='Modern.TFrame', padding=ModernStyle.PADDING_SM)
+        content_frame.pack(fill="both", expand=True, padx=ModernStyle.PADDING_SM, pady=ModernStyle.PADDING_SM)
+        
+        content_frame.columnconfigure(0, weight=1)
+        
+        # Directory selection card with compact layout
+        dir_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
+        dir_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         dir_card.columnconfigure(0, weight=1)
         
         dir_title = ModernWidget.create_title_label(dir_card, text=_("directory_selection"))
-        dir_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        dir_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
         
         self.source_selector = MultiSourceSelector(dir_card)
-        self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_SM))
+        self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_XS))
         
         self.multi_dest_selector = MultiDestinationSelector(dir_card)
         self.multi_dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E))
         
-        # Options card
-        options_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
-        options_card.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        # Options card with compact layout
+        options_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
+        options_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         options_card.columnconfigure(0, weight=1)
         
         options_title = ModernWidget.create_title_label(options_card, text=_("options"))
-        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
+        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
         
         self.options_frame = OptionsFrame(options_card)
         self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
         
-        # Next step guidance card
-        guidance_card = ModernWidget.create_card_frame(settings_frame, padding=ModernStyle.PADDING_MD)
-        guidance_card.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_MD))
+        # Next step guidance card with compact layout
+        guidance_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
+        guidance_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         guidance_card.columnconfigure(1, weight=1)
         
         # Status icon
         self.status_icon_label = ttk.Label(guidance_card, text="⏸", 
                                           font=(ModernStyle.FONT_FAMILY, ModernStyle.FONT_SIZE_LG), 
                                           style='Modern.TLabel')
-        self.status_icon_label.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_MD), sticky=tk.W)
+        self.status_icon_label.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM), sticky=tk.W)
         
         # Guidance text
         self.guidance_text = ttk.Label(guidance_card, text=_("setup_guidance"), 
-                                      style='Modern.TLabel', wraplength=600)
+                                      style='Modern.TLabel', wraplength=500)
         self.guidance_text.grid(row=0, column=1, sticky=(tk.W, tk.E))
         
         # Next step button
         self.next_step_button = ttk.Button(guidance_card, text=_("go_to_execution"), 
                                           command=self._start_processing, 
                                           style='Accent.TButton', state='disabled')
-        self.next_step_button.grid(row=0, column=2, padx=(ModernStyle.PADDING_MD, 0), sticky=tk.E)
+        self.next_step_button.grid(row=0, column=2, padx=(ModernStyle.PADDING_SM, 0), sticky=tk.E)
+        
+        # Store canvas reference for future use
+        self._settings_canvas = canvas
         
         # Bind events to check settings completion
         self._setup_settings_validation()
