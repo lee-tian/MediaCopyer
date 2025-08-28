@@ -194,18 +194,6 @@ class MediaCopyerApp:
         self.multi_dest_selector = MultiDestinationSelector(dir_card)
         self.multi_dest_selector.grid(row=2, column=0, sticky=(tk.W, tk.E))
         
-        # Options card with compact layout
-        options_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
-        options_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
-        options_card.columnconfigure(0, weight=1)
-        
-        options_title = ModernWidget.create_title_label(options_card, text=_("options"))
-        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
-        
-        self.options_frame = OptionsFrame(options_card)
-        self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
-        
-        # Next step guidance card with compact layout
         guidance_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
         guidance_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
         guidance_card.columnconfigure(1, weight=1)
@@ -226,6 +214,17 @@ class MediaCopyerApp:
                                           command=self._start_processing, 
                                           style='Accent.TButton', state='disabled')
         self.next_step_button.grid(row=0, column=2, padx=(ModernStyle.PADDING_SM, 0), sticky=tk.E)
+        
+        # Options card with compact layout (moved to bottom)
+        options_card = ModernWidget.create_card_frame(content_frame, padding=ModernStyle.PADDING_SM)
+        options_card.pack(fill="x", pady=(0, ModernStyle.PADDING_SM))
+        options_card.columnconfigure(0, weight=1)
+        
+        options_title = ModernWidget.create_title_label(options_card, text=_("options"))
+        options_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_XS))
+        
+        self.options_frame = OptionsFrame(options_card)
+        self.options_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
         
         # Store canvas reference for future use
         self._settings_canvas = canvas
