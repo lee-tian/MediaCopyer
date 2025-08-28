@@ -195,6 +195,132 @@ class LogDisplay(ttk.LabelFrame, I18nMixin):
         self.update_idletasks()
 
 
+class MultiSourceSelector(ttk.LabelFrame, I18nMixin):
+    """A widget for selecting multiple source directories"""
+    
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, text=_("source_directories"), 
+                        style='Modern.TLabelframe', **kwargs)
+        
+        # Setup the layout
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        
+        self.sources = []
+        
+        # Create container with padding
+        container = ttk.Frame(self, style='Surface.TFrame')
+        container.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), 
+                      padx=ModernStyle.PADDING_MD, pady=ModernStyle.PADDING_MD)
+        container.columnconfigure(0, weight=1)
+        container.rowconfigure(1, weight=1)
+        
+        # Control buttons frame
+        buttons_frame = ttk.Frame(container, style='Surface.TFrame')
+        buttons_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), 
+                          pady=(0, ModernStyle.PADDING_SM))
+        
+        # Add source button
+        self.add_button = ModernWidget.create_modern_button(buttons_frame, _("add_source"), 
+                                                           command=self._add_source)
+        self.add_button.grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
+        
+        # Remove selected button
+        self.remove_button = ModernWidget.create_secondary_button(buttons_frame, _("remove_selected"), 
+                                                                 command=self._remove_selected)
+        self.remove_button.grid(row=0, column=1)
+        self.remove_button.config(state='disabled')
+        
+        # Source list with scrollbar
+        list_frame = ttk.Frame(container, style='Surface.TFrame')
+        list_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        list_frame.columnconfigure(0, weight=1)
+        list_frame.rowconfigure(0, weight=1)
+        
+        # Create Treeview with scrollbar
+        self.tree_frame = ttk.Frame(list_frame, style='Surface.TFrame')
+        self.tree_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.tree_frame.columnconfigure(0, weight=1)
+        self.tree_frame.rowconfigure(0, weight=1)
+        
+        # Treeview for source list (reduced height for better space utilization)
+        self.tree = ttk.Treeview(self.tree_frame, columns=('path',), show='tree headings', height=4)
+        self.tree.heading('#0', text=_("source"))
+        self.tree.heading('path', text=_("path"))
+        self.tree.column('#0', width=100, minwidth=80)
+        self.tree.column('path', width=400, minwidth=200)
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(self.tree_frame, orient='vertical', command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Grid the tree and scrollbar
+        self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        
+        # Bind selection event
+        self.tree.bind('<<TreeviewSelect>>', self._on_selection_change)
+    
+    def _add_source(self):
+        """Add a new source directory"""
+        directory = filedialog.askdirectory(title=_("select_source_directory"))
+        if directory and directory not in self.sources:
+            self.sources.append(directory)
+            # Add to tree view
+            item_id = self.tree.insert('', 'end', text=f"{_('source')} {len(self.sources)}", 
+                                     values=(directory,))
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.sources else 'disabled')
+    
+    def _remove_selected(self):
+        """Remove the selected source"""
+        selection = self.tree.selection()
+        if selection:
+            item = selection[0]
+            # Get the path from the treeview
+            path = self.tree.item(item, 'values')[0]
+            if path in self.sources:
+                self.sources.remove(path)
+            
+            # Remove from tree
+            self.tree.delete(item)
+            
+            # Update tree item labels
+            self._update_tree_labels()
+            
+            # Update remove button state
+            self.remove_button.config(state='normal' if self.sources else 'disabled')
+    
+    def _update_tree_labels(self):
+        """Update the tree item labels to maintain numbering"""
+        for i, item in enumerate(self.tree.get_children()):
+            self.tree.item(item, text=f"{_('source')} {i + 1}")
+    
+    def _on_selection_change(self, event):
+        """Handle treeview selection change"""
+        selection = self.tree.selection()
+        self.remove_button.config(state='normal' if selection else 'disabled')
+    
+    def get_sources(self):
+        """Get the list of selected source directories"""
+        return self.sources.copy()
+    
+    def clear_sources(self):
+        """Clear all sources"""
+        self.sources.clear()
+        self.tree.delete(*self.tree.get_children())
+        self.remove_button.config(state='disabled')
+    
+    def update_texts(self):
+        """Update texts when language changes"""
+        self.config(text=_("source_directories"))
+        self.add_button.config(text=_("add_source"))
+        self.remove_button.config(text=_("remove_selected"))
+        self.tree.heading('#0', text=_("source"))
+        self.tree.heading('path', text=_("path"))
+        self._update_tree_labels()
+
+
 class MultiDestinationSelector(ttk.LabelFrame, I18nMixin):
     """A widget for selecting multiple destination directories"""
     

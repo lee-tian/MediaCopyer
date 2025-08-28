@@ -8,7 +8,7 @@ from tkinter import ttk
 import os
 
 from core.utils import check_dependencies
-from .widgets import DirectorySelector, MultiDestinationSelector, ProgressDisplay, LogDisplay
+from .widgets import DirectorySelector, MultiSourceSelector, MultiDestinationSelector, ProgressDisplay, LogDisplay
 from .options_frame import OptionsFrame
 from .processor import FileProcessor
 from .i18n import i18n, _, I18nMixin
@@ -146,7 +146,7 @@ class MediaCopyerApp:
         dir_title = ModernWidget.create_title_label(dir_card, text=_("directory_selection"))
         dir_title.grid(row=0, column=0, sticky=tk.W, pady=(0, ModernStyle.PADDING_SM))
         
-        self.source_selector = DirectorySelector(dir_card, _("source_directory"), _("select_source"))
+        self.source_selector = MultiSourceSelector(dir_card)
         self.source_selector.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, ModernStyle.PADDING_SM))
         
         self.multi_dest_selector = MultiDestinationSelector(dir_card)
@@ -243,7 +243,7 @@ class MediaCopyerApp:
         
         # Then start processing
         self.processor.start_processing(
-            source_dir=self.source_selector.get_directory(),
+            source_dirs=self.source_selector.get_sources(),
             dest_dirs=self.multi_dest_selector.get_destinations(),
             move_mode=self.options_frame.get_move_mode(),
             dry_run=self.options_frame.get_dry_run(),
@@ -262,10 +262,10 @@ class MediaCopyerApp:
     
     def _check_settings_completion(self):
         """Check if all required settings are completed"""
-        source_dir = self.source_selector.get_directory()
+        source_dirs = self.source_selector.get_sources()
         dest_dirs = self.multi_dest_selector.get_destinations()
         
-        is_complete = bool(source_dir and dest_dirs)
+        is_complete = bool(source_dirs and dest_dirs)
         
         if is_complete:
             self.status_icon_label.config(text="✓", foreground="green")
