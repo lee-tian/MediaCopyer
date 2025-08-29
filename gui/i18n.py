@@ -15,10 +15,11 @@ class I18nManager:
     """Internationalization manager for handling multiple languages"""
     
     def __init__(self):
-        self.current_language = "en_US"  # Default to English
+        self.current_language = "auto"  # Default to auto-detect language
         self.languages = {}
         self.observers = []  # List of callbacks to notify when language changes
         self._load_languages()
+        self._load_saved_language()
     
     def _load_languages(self):
         """Load language definitions from separate locale files"""
@@ -62,6 +63,49 @@ class I18nManager:
                 }
             }
     
+    def _load_saved_language(self):
+        """Load the saved language from configuration"""
+        try:
+            # Import here to avoid circular imports
+            from core.config import get_config
+            config = get_config()
+            saved_language = config.get_language()
+            
+            # If saved language is 'auto', detect system language
+            if saved_language == 'auto':
+                saved_language = self._detect_system_language()
+            
+            # Only set if the saved language is available
+            if saved_language in self.languages:
+                self.current_language = saved_language
+            else:
+                # If saved language is not available, fall back to English and save it
+                self.current_language = "en_US"
+                config.set_language(self.current_language)
+        except Exception as e:
+            print(f"Warning: Could not load saved language: {e}")
+            self.current_language = self._detect_system_language()
+    
+    def _detect_system_language(self):
+        """Detect system language and return appropriate language code"""
+        try:
+            import locale
+            # Get system locale
+            system_locale = locale.getdefaultlocale()[0]
+            
+            if system_locale:
+                # Convert common locale formats to our language codes
+                if system_locale.startswith('zh'):
+                    return 'zh_CN'
+                elif system_locale.startswith('en'):
+                    return 'en_US'
+            
+            # Default to English if detection fails
+            return 'en_US'
+        except Exception:
+            # If locale detection fails, default to English
+            return 'en_US'
+    
     def get_text(self, key: str, default: str = None) -> str:
         """Get localized text for the given key"""
         if self.current_language in self.languages:
@@ -70,13 +114,20 @@ class I18nManager:
     
     def set_language(self, language: str):
         """Set the current language and notify observers"""
-        if language in self.languages:
+        if language == 'auto':
+            # For 'auto', detect system language and use it
+            detected_language = self._detect_system_language()
+            if detected_language in self.languages:
+                self.current_language = detected_language
+                self._notify_observers()
+        elif language in self.languages:
             self.current_language = language
             self._notify_observers()
     
     def get_available_languages(self) -> Dict[str, str]:
         """Get available languages with their display names"""
         return {
+            "auto": "Auto",
             "zh_CN": "中文",
             "en_US": "English"
         }
@@ -84,6 +135,14 @@ class I18nManager:
     def get_current_language(self) -> str:
         """Get current language code"""
         return self.current_language
+    
+    def get_saved_language_preference(self) -> str:
+        """Get the saved language preference (including 'auto')"""
+        try:
+            from core.config import get_config
+            return get_config().get_language()
+        except Exception:
+            return 'auto'
     
     def add_observer(self, callback):
         """Add an observer to be notified when language changes"""

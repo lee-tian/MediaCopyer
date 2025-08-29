@@ -110,7 +110,7 @@ class MediaCopyerApp:
         
         ttk.Label(lang_frame, text=_("language") + ":", style='Modern.TLabel').grid(row=0, column=0, padx=(0, ModernStyle.PADDING_SM))
         
-        self.language_var = tk.StringVar(value=i18n.get_current_language())
+        self.language_var = tk.StringVar()
         self.language_combo = ttk.Combobox(
             lang_frame, textvariable=self.language_var, state="readonly", width=10,
             font=(ModernStyle.FONT_FAMILY, ModernStyle.FONT_SIZE_SM)
@@ -118,9 +118,16 @@ class MediaCopyerApp:
         
         languages = i18n.get_available_languages()
         self.language_combo['values'] = list(languages.values())
-        current_lang = i18n.get_current_language()
-        if current_lang in languages:
-            self.language_combo.set(languages[current_lang])
+        
+        # Set combo box to show the saved language preference (which may be 'auto')
+        saved_lang_pref = i18n.get_saved_language_preference()
+        if saved_lang_pref in languages:
+            self.language_combo.set(languages[saved_lang_pref])
+        else:
+            # Fallback to current language
+            current_lang = i18n.get_current_language()
+            if current_lang in languages:
+                self.language_combo.set(languages[current_lang])
         
         self.language_combo.bind('<<ComboboxSelected>>', self._on_language_change)
         self.language_combo.grid(row=0, column=1)
