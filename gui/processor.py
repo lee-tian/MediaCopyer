@@ -25,7 +25,7 @@ class FileProcessor:
         """Cancel the current processing operation"""
         if self.is_processing and self.processing_thread:
             self.cancel_requested = True
-            self.log_display.add_message(_("canceling_operation"))
+            self.log_display.add_log(_("canceling_operation"))
             self.log_display.update_display()
     
     def start_processing(self, source_dirs, dest_dirs, move_mode, dry_run, md5_check, organization_mode):
@@ -82,22 +82,22 @@ class FileProcessor:
         """Process the media files using the core library"""
         try:
             self.progress_display.set_status(_("processing_files"))
-            self.log_display.add_message(_("start_processing_media"))
+            self.log_display.add_log(_("start_processing_media"))
             
             # Log all source directories
-            self.log_display.add_message(f"源目录数量: {len(source_paths)}")
+            self.log_display.add_log(f"源目录数量: {len(source_paths)}")
             for i, source_path in enumerate(source_paths, 1):
-                self.log_display.add_message(f"源目录 {i}: {source_path}")
+                self.log_display.add_log(f"源目录 {i}: {source_path}")
             
             # Log all destination directories
-            self.log_display.add_message(f"目标目录数量: {len(dest_paths)}")
+            self.log_display.add_log(f"目标目录数量: {len(dest_paths)}")
             for i, dest_path in enumerate(dest_paths, 1):
-                self.log_display.add_message(f"目标目录 {i}: {dest_path}")
+                self.log_display.add_log(f"目标目录 {i}: {dest_path}")
             
-            self.log_display.add_message(_("mode_info").format(_("move_mode_text") if move_mode else _("copy_mode_text")))
+            self.log_display.add_log(_("mode_info").format(_("move_mode_text") if move_mode else _("copy_mode_text")))
             if dry_run:
-                self.log_display.add_message(_("dry_run_info"))
-            self.log_display.add_message("="*50)
+                self.log_display.add_log(_("dry_run_info"))
+            self.log_display.add_log("="*50)
             self.log_display.update_display()
             
             # Scan all source directories to get total file count
@@ -107,10 +107,10 @@ class FileProcessor:
                 all_media_files.extend(media_files)
             
             if not all_media_files:
-                self.log_display.add_message(_("no_media_files_found"))
+                self.log_display.add_log(_("no_media_files_found"))
                 return
             
-            self.log_display.add_message(_("found_files_count").format(len(all_media_files)))
+            self.log_display.add_log(_("found_files_count").format(len(all_media_files)))
             self.log_display.update_display()
             
             # Initialize combined statistics
@@ -128,24 +128,24 @@ class FileProcessor:
             for dest_index, dest_path in enumerate(dest_paths):
                 # Check if cancel was requested
                 if self.cancel_requested:
-                    self.log_display.add_message(_("operation_canceled"))
+                    self.log_display.add_log(_("operation_canceled"))
                     self.progress_display.set_status(_("operation_canceled"))
                     return
                 
-                self.log_display.add_message(f"\n{'='*30}")
-                self.log_display.add_message(f"处理目标目录 {dest_index + 1}/{len(dest_paths)}: {dest_path}")
-                self.log_display.add_message(f"{'='*30}")
+                self.log_display.add_log(f"\n{'='*30}")
+                self.log_display.add_log(f"处理目标目录 {dest_index + 1}/{len(dest_paths)}: {dest_path}")
+                self.log_display.add_log(f"{'='*30}")
                 self.log_display.update_display()
                 
                 # Process each source directory for this destination
                 for source_index, source_path in enumerate(source_paths):
                     # Check if cancel was requested
                     if self.cancel_requested:
-                        self.log_display.add_message(_("operation_canceled"))
+                        self.log_display.add_log(_("operation_canceled"))
                         self.progress_display.set_status(_("operation_canceled"))
                         return
                     
-                    self.log_display.add_message(f"源目录 {source_index + 1}/{len(source_paths)}: {source_path}")
+                    self.log_display.add_log(f"源目录 {source_index + 1}/{len(source_paths)}: {source_path}")
                     self.log_display.update_display()
                     
                     # Define callback functions for this source-destination pair
@@ -161,13 +161,13 @@ class FileProcessor:
                         
                         self.progress_display.set_progress(overall_current, overall_total)
                         self.progress_display.set_status(f"目标 {dest_index + 1}/{len(dest_paths)}, 源 {source_index + 1}/{len(source_paths)}: {filename}")
-                        self.log_display.add_message(_("processing_file").format(filename))
+                        self.log_display.add_log(_("processing_file").format(filename))
                         self.log_display.update_display()
                         return True  # Continue processing
                     
                     def log_callback(message):
                         """Callback function for log messages"""
-                        self.log_display.add_message(message)
+                        self.log_display.add_log(message)
                         self.log_display.update_display()
                     
                     try:
@@ -189,14 +189,14 @@ class FileProcessor:
                         combined_stats['processed'] += stats['processed']
                         
                         # Log individual operation results
-                        self.log_display.add_message(f"源 {source_index + 1} -> 目标 {dest_index + 1} 完成:")
-                        self.log_display.add_message(f"  照片: {stats['photos']}")
-                        self.log_display.add_message(f"  视频: {stats['videos']}")
-                        self.log_display.add_message(f"  错误: {stats['errors']}")
-                        self.log_display.add_message(f"  总计: {stats['processed']}")
+                        self.log_display.add_log(f"源 {source_index + 1} -> 目标 {dest_index + 1} 完成:")
+                        self.log_display.add_log(f"  照片: {stats['photos']}")
+                        self.log_display.add_log(f"  视频: {stats['videos']}")
+                        self.log_display.add_log(f"  错误: {stats['errors']}")
+                        self.log_display.add_log(f"  总计: {stats['processed']}")
                         
                     except Exception as e:
-                        self.log_display.add_message(f"源 {source_index + 1} -> 目标 {dest_index + 1} 处理错误: {e}")
+                        self.log_display.add_log(f"源 {source_index + 1} -> 目标 {dest_index + 1} 处理错误: {e}")
                         # Get the file count for this specific source directory
                         source_files = scan_directory(source_path)
                         combined_stats['errors'] += len(source_files)  # Count all files as errors for this operation
@@ -204,16 +204,16 @@ class FileProcessor:
                     current_operation += 1
             
             # Print combined statistics
-            self.log_display.add_message("\n" + "="*50)
-            self.log_display.add_message("所有目标处理完成")
-            self.log_display.add_message("="*50)
-            self.log_display.add_message(f"总照片数: {combined_stats['photos']}")
-            self.log_display.add_message(f"总视频数: {combined_stats['videos']}")
-            self.log_display.add_message(f"总错误数: {combined_stats['errors']}")
-            self.log_display.add_message(f"总处理数: {combined_stats['processed']}")
+            self.log_display.add_log("\n" + "="*50)
+            self.log_display.add_log("所有目标处理完成")
+            self.log_display.add_log("="*50)
+            self.log_display.add_log(f"总照片数: {combined_stats['photos']}")
+            self.log_display.add_log(f"总视频数: {combined_stats['videos']}")
+            self.log_display.add_log(f"总错误数: {combined_stats['errors']}")
+            self.log_display.add_log(f"总处理数: {combined_stats['processed']}")
             
             if dry_run:
-                self.log_display.add_message("\n" + _("dry_run_notice"))
+                self.log_display.add_log("\n" + _("dry_run_notice"))
             
             self.progress_display.set_status(_("processing_complete"))
             
@@ -223,7 +223,7 @@ class FileProcessor:
                 messagebox.showwarning(_("complete"), f"处理了 {combined_stats['processed']} 个文件，但有 {combined_stats['errors']} 个错误")
         
         except Exception as e:
-            self.log_display.add_message(_("serious_error").format(e))
+            self.log_display.add_log(_("serious_error").format(e))
             messagebox.showerror(_("error"), _("error_occurred").format(e))
         
         finally:

@@ -147,4 +147,6 @@ class I18nMixin:
     def destroy(self):
         """Clean up i18n observer when widget is destroyed"""
         i18n.remove_observer(self._update_i18n_text)
-        super().destroy()
+        # Only call super().destroy() if it exists
+        if hasattr(super(), 'destroy'):
+            super().destroy()

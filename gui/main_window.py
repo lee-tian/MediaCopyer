@@ -8,7 +8,9 @@ from tkinter import ttk
 import os
 
 from core.utils import check_dependencies
-from .widgets import DirectorySelector, MultiSourceSelector, MultiDestinationSelector, ProgressDisplay, LogDisplay
+from .directory_selector import DirectorySelector, MultiSourceSelector, MultiDestinationSelector
+from .progress_display import ProgressDisplay
+from .log_display import LogDisplay
 from .options_frame import OptionsFrame
 from .processor import FileProcessor
 from .i18n import i18n, _, I18nMixin
@@ -280,8 +282,8 @@ class MediaCopyerApp:
         
         if messages:
             for msg in messages:
-                self.log_display.add_message(msg)
-            self.log_display.add_message(_("dependency_warning") + "\n" + "="*50)
+                self.log_display.add_log(msg)
+            self.log_display.add_log(_("dependency_warning") + "\n" + "="*50)
     
     def _start_processing(self):
         """Start the file processing"""
