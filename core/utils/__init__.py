@@ -29,9 +29,37 @@ from .string_utils import (
 import sys
 
 
-def check_dependencies() -> dict:
+def check_dependencies() -> list:
     """
     Check if required dependencies are available
+    
+    Returns:
+        List of warning messages for missing dependencies
+    """
+    warnings = []
+    
+    # Check Python version
+    if sys.version_info < (3, 7):
+        warnings.append("python_version: Python 3.7+ required for optimal performance")
+    
+    # Check PIL/Pillow
+    try:
+        from PIL import Image
+    except ImportError:
+        warnings.append("PIL: Image processing features will be limited")
+    
+    # Check exifread
+    try:
+        import exifread
+    except ImportError:
+        warnings.append("exifread: EXIF metadata reading will be unavailable")
+    
+    return warnings
+
+
+def get_dependency_status() -> dict:
+    """
+    Get detailed dependency status
     
     Returns:
         Dictionary with dependency status
@@ -80,5 +108,6 @@ __all__ = [
     'format_date_path',
     'sanitize_filename',
     # System checks
-    'check_dependencies'
+    'check_dependencies',
+    'get_dependency_status'
 ]
