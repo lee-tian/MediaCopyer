@@ -199,4 +199,8 @@ translations = {
     "processing_complete_log": "处理完成: {} 个文件, {} 个错误",
     "parallel_progress_status": "[并行] 源{}->目标{}: {}",
     "parallel_processing_error": "[并行] 源 {} -> 目标 {} 处理错误: {}",
+    
+    # Duplicate file handling
+    "total_duplicates": "总重复文件数: {}",
+    "parallel_duplicates": "[并行]   重复: {}",
 }

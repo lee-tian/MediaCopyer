@@ -196,4 +196,8 @@ translations = {
     "processing_complete_log": "Processing complete: {} files, {} errors",
     "parallel_progress_status": "[Parallel] Source{}->Destination{}: {}",
     "parallel_processing_error": "[Parallel] Source {} -> Destination {} processing error: {}",
+    
+    # Duplicate file handling
+    "total_duplicates": "Total duplicates: {}",
+    "parallel_duplicates": "[Parallel]   Duplicates: {}",
 }

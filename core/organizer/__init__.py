@@ -136,6 +136,24 @@ def scan_all_files(source_dir: Path) -> List[Tuple[Path, str]]:
     return all_files
 
 
+def is_duplicate_file(source_path: Path, target_path: Path) -> bool:
+    """Check if source file is a duplicate of target file by comparing MD5 hashes"""
+    if not target_path.exists():
+        return False
+    
+    try:
+        # Compare file sizes first (quick check)
+        if source_path.stat().st_size != target_path.stat().st_size:
+            return False
+        
+        # Compare MD5 hashes
+        source_md5 = calculate_md5(source_path)
+        target_md5 = calculate_md5(target_path)
+        return source_md5 == target_md5
+    except Exception:
+        return False
+
+
 def generate_unique_filename(target_path: Path) -> Path:
     """Generate a unique filename if file already exists"""
     if not target_path.exists():
@@ -155,7 +173,8 @@ def generate_unique_filename(target_path: Path) -> Path:
 
 
 def get_target_directory(dest_path: Path, file_path: Path, file_type: str, 
-                        file_date: datetime, organization_mode: str = "date") -> Path:
+                        file_date: datetime, organization_mode: str = "date", 
+                        is_duplicate: bool = False) -> Path:
     """Determine target directory structure based on organization mode"""
     year = file_date.strftime('%Y')
     date_str = file_date.strftime('%Y-%m-%d')
@@ -192,6 +211,35 @@ def get_target_directory(dest_path: Path, file_path: Path, file_type: str,
             # Default to date mode if unknown mode
             target_dir = base_dir / date_str
     
+    # If this is a duplicate file, move it to duplicate folder
+    if is_duplicate:
+        # Create duplicate folder structure: Picture/duplicate, Video/duplicate
+        if file_type == 'photo':
+            duplicate_base = dest_path / 'Picture' / 'duplicate'
+        elif file_type == 'video':
+            duplicate_base = dest_path / 'Video' / 'duplicate'
+        else:
+            duplicate_base = dest_path / 'Other' / 'duplicate'
+        
+        # Keep the same sub-organization within duplicate folder
+        if organization_mode == "extension":
+            extension = file_path.suffix.lower()
+            if not extension:
+                extension = 'no_extension'
+            else:
+                extension = extension[1:]  # Remove the dot
+            target_dir = duplicate_base / extension.upper()
+        elif organization_mode == "date":
+            target_dir = duplicate_base / date_str
+        elif organization_mode == "device":
+            device_name = get_device_name(str(file_path), file_type)
+            target_dir = duplicate_base / device_name
+        elif organization_mode == "date_device":
+            device_name = get_device_name(str(file_path), file_type)
+            target_dir = duplicate_base / date_str / device_name
+        else:
+            target_dir = duplicate_base / date_str
+    
     return target_dir
 
 
@@ -211,14 +259,22 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
         verify_md5: Whether to verify file integrity using MD5 checksums
     
     Returns:
-        dict: Result with 'success', 'message', 'target_path', 'device_name' (if applicable)
+        dict: Result with 'success', 'message', 'target_path', 'device_name' (if applicable), 'is_duplicate'
     """
     try:
         # Get file creation date
         file_date = get_file_date(str(file_path), file_type)
         
-        # Create target directory structure
-        target_dir = get_target_directory(dest_path, file_path, file_type, file_date, organization_mode)
+        # First, check if this file already exists in the normal location
+        normal_target_dir = get_target_directory(dest_path, file_path, file_type, file_date, organization_mode, is_duplicate=False)
+        normal_target_path = normal_target_dir / file_path.name
+        
+        is_duplicate = False
+        if normal_target_path.exists() and is_duplicate_file(file_path, normal_target_path):
+            is_duplicate = True
+        
+        # Create target directory structure (normal or duplicate)
+        target_dir = get_target_directory(dest_path, file_path, file_type, file_date, organization_mode, is_duplicate=is_duplicate)
         
         # Get device name if organizing by device
         device_name = None
@@ -235,13 +291,14 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
             target_path = generate_unique_filename(target_path)
         
         # Perform the file operation
+        operation_type = "duplicate " if is_duplicate else ""
         if not dry_run:
             if move_mode:
                 shutil.move(str(file_path), str(target_path))
-                operation = "moved"
+                operation = f"{operation_type}moved"
             else:
                 shutil.copy2(str(file_path), str(target_path))
-                operation = "copied"
+                operation = f"{operation_type}copied"
                 
             # Verify MD5 if requested and not in move mode
             if verify_md5 and not move_mode:
@@ -255,7 +312,8 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
                             'message': f"MD5 verification failed for {file_path.name}",
                             'target_path': None,
                             'device_name': device_name,
-                            'operation': None
+                            'operation': None,
+                            'is_duplicate': is_duplicate
                         }
                     else:
                         operation += " (MD5 verified)"
@@ -268,19 +326,22 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
                         'message': f"MD5 verification error for {file_path.name}: {e}",
                         'target_path': None,
                         'device_name': device_name,
-                        'operation': None
+                        'operation': None,
+                        'is_duplicate': is_duplicate
                     }
         else:
-            operation = f"{'move' if move_mode else 'copy'} (dry run)"
+            operation = f"{operation_type}{'move' if move_mode else 'copy'} (dry run)"
             if verify_md5 and not move_mode:
                 operation += " with MD5 verification"
         
+        duplicate_message = " (duplicate detected)" if is_duplicate else ""
         return {
             'success': True,
-            'message': f"Successfully {operation}: {file_path.name}",
+            'message': f"Successfully {operation}: {file_path.name}{duplicate_message}",
             'target_path': target_path,
             'device_name': device_name,
-            'operation': operation
+            'operation': operation,
+            'is_duplicate': is_duplicate
         }
         
     except Exception as e:
@@ -289,7 +350,8 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
             'message': f"Error processing {file_path}: {e}",
             'target_path': None,
             'device_name': None,
-            'operation': None
+            'operation': None,
+            'is_duplicate': False
         }
 
 
@@ -337,6 +399,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         'photos': 0,
         'videos': 0,
         'other': 0,
+        'duplicates': 0,
         'errors': 0,
         'devices': set(),
         'results': []
@@ -363,6 +426,10 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
                 stats['videos'] += 1
             else:
                 stats['other'] += 1
+            
+            # Track duplicates
+            if result.get('is_duplicate', False):
+                stats['duplicates'] += 1
             
             if result['device_name']:
                 stats['devices'].add(result['device_name'])

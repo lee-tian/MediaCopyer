@@ -156,6 +156,7 @@ class FileProcessor:
             self._safe_log(_("parallel_source_dest_complete").format(source_index + 1, dest_index + 1))
             self._safe_log(_("parallel_photos").format(stats['photos']))
             self._safe_log(_("parallel_videos").format(stats['videos']))
+            self._safe_log(_("parallel_duplicates").format(stats.get('duplicates', 0)))
             self._safe_log(_("parallel_errors").format(stats['errors']))
             self._safe_log(_("parallel_total").format(stats['processed']))
             
@@ -167,9 +168,9 @@ class FileProcessor:
             # Get the file count for this specific source directory for error counting
             try:
                 source_files = scan_directory(source_path)
-                error_stats = {'photos': 0, 'videos': 0, 'errors': len(source_files), 'processed': 0}
+                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'errors': len(source_files), 'processed': 0}
             except:
-                error_stats = {'photos': 0, 'videos': 0, 'errors': 1, 'processed': 0}
+                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'errors': 1, 'processed': 0}
             return {'success': False, 'stats': error_stats, 'message': str(e)}
 
     def _process_files(self, source_paths, dest_paths, move_mode, dry_run, md5_check, organization_mode):
@@ -269,6 +270,7 @@ class FileProcessor:
             combined_stats = {
                 'photos': 0,
                 'videos': 0,
+                'duplicates': 0,
                 'errors': 0,
                 'processed': 0
             }
@@ -323,6 +325,7 @@ class FileProcessor:
                                 with self.stats_lock:
                                     combined_stats['photos'] += result['stats']['photos']
                                     combined_stats['videos'] += result['stats']['videos']
+                                    combined_stats['duplicates'] += result['stats'].get('duplicates', 0)
                                     combined_stats['errors'] += result['stats']['errors']
                                     combined_stats['processed'] += result['stats']['processed']
                         except Exception as e:
@@ -337,6 +340,7 @@ class FileProcessor:
             self._safe_log("="*60)
             self._safe_log(_("total_photos").format(combined_stats['photos']))
             self._safe_log(_("total_videos").format(combined_stats['videos']))
+            self._safe_log(_("total_duplicates").format(combined_stats['duplicates']))
             self._safe_log(_("total_errors").format(combined_stats['errors']))
             self._safe_log(_("total_processed").format(combined_stats['processed']))
             
