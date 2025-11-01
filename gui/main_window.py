@@ -317,6 +317,7 @@ class MediaCopyerApp:
             move_mode=self.options_frame.get_move_mode(),
             dry_run=self.options_frame.get_dry_run(),
             md5_check=self.options_frame.get_md5_check(),
+            ignore_duplicates=self.options_frame.get_ignore_duplicates(),
             organization_mode=self.options_frame.get_organization_mode()
         )
     

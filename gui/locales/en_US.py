@@ -29,6 +29,7 @@ translations = {
     "org_mode_extension": "By Extension",
     "dry_run_mode": "Dry run mode",
     "md5_verification": "MD5 integrity verification",
+    "ignore_duplicates": "Ignore duplicate files",
     "processing_log": "Processing Log", 
     "source_directories": "Source Directories",
     "destination_directories": "Destination Directories",
@@ -80,6 +81,7 @@ translations = {
     "move_mode_text": "Move mode",
     "copy_mode_text": "Copy mode",
     "dry_run_info": "Dry run mode - Preview only, files will not be actually moved or copied",
+    "ignore_duplicates_info": "Ignore duplicates mode - Skip duplicate files without processing",
     "no_media_files_found": "No media files found",
     "found_files_count": "Found {} media files",
     "processing_file_progress": "Processing... ({}/{}) {}",
@@ -199,7 +201,9 @@ translations = {
     
     # Duplicate file handling
     "total_duplicates": "Total duplicates: {}",
+    "total_skipped": "Total skipped: {}",
     "parallel_duplicates": "[Parallel]   Duplicates: {}",
+    "parallel_skipped": "[Parallel]   Skipped: {}",
     
     # Enhanced copy analysis
     "copy_operation_summary": "📋 Copy Operation Summary:",

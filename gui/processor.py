@@ -42,7 +42,7 @@ class FileProcessor:
             self.log_display.add_log(_("canceling_operation"))
             self.log_display.update_display()
     
-    def start_processing(self, source_dirs, dest_dirs, move_mode, dry_run, md5_check, organization_mode):
+    def start_processing(self, source_dirs, dest_dirs, move_mode, dry_run, md5_check, ignore_duplicates, organization_mode):
         """Start the file processing in a separate thread"""
         if self.is_processing:
             return
@@ -87,7 +87,7 @@ class FileProcessor:
         
         self.processing_thread = threading.Thread(
             target=self._process_files,
-            args=(source_paths, dest_paths, move_mode, dry_run, md5_check, organization_mode)
+            args=(source_paths, dest_paths, move_mode, dry_run, md5_check, ignore_duplicates, organization_mode)
         )
         self.processing_thread.daemon = True
         self.processing_thread.start()
@@ -109,7 +109,7 @@ class FileProcessor:
     
     def _process_single_source_to_dest(self, source_path, dest_path, source_index, dest_index, 
                                      total_sources, total_dests, move_mode, dry_run, 
-                                     md5_check, organization_mode):
+                                     md5_check, ignore_duplicates, organization_mode):
         """Process a single source directory to a single destination directory"""
         try:
             # Check if cancel was requested
@@ -149,6 +149,7 @@ class FileProcessor:
                 move_mode=move_mode,  # Each thread handles move independently
                 dry_run=dry_run,
                 verify_md5=md5_check,
+                ignore_duplicates=ignore_duplicates,
                 organization_mode=organization_mode,
                 progress_callback=progress_callback
             )
@@ -158,6 +159,7 @@ class FileProcessor:
             self._safe_log(_("parallel_photos").format(stats['photos']))
             self._safe_log(_("parallel_videos").format(stats['videos']))
             self._safe_log(_("parallel_duplicates").format(stats.get('duplicates', 0)))
+            self._safe_log(_("parallel_skipped").format(stats.get('skipped', 0)))
             self._safe_log(_("parallel_errors").format(stats['errors']))
             self._safe_log(_("parallel_total").format(stats['processed']))
             
@@ -169,12 +171,12 @@ class FileProcessor:
             # Get the file count for this specific source directory for error counting
             try:
                 source_files = scan_directory(source_path)
-                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'errors': len(source_files), 'processed': 0}
+                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'skipped': 0, 'errors': len(source_files), 'processed': 0}
             except:
-                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'errors': 1, 'processed': 0}
+                error_stats = {'photos': 0, 'videos': 0, 'duplicates': 0, 'skipped': 0, 'errors': 1, 'processed': 0}
             return {'success': False, 'stats': error_stats, 'message': str(e)}
 
-    def _process_files(self, source_paths, dest_paths, move_mode, dry_run, md5_check, organization_mode):
+    def _process_files(self, source_paths, dest_paths, move_mode, dry_run, md5_check, ignore_duplicates, organization_mode):
         """Process the media files using parallel processing"""
         try:
             self.progress_display.set_status(_("processing_files"))
@@ -193,6 +195,8 @@ class FileProcessor:
             self._safe_log(_("mode_info").format(_("move_mode_text") if move_mode else _("copy_mode_text")))
             if dry_run:
                 self._safe_log(_("dry_run_info"))
+            if ignore_duplicates:
+                self._safe_log(_("ignore_duplicates_info"))
             
             # Calculate and display source directory sizes
             self._safe_log("="*60)
@@ -281,6 +285,7 @@ class FileProcessor:
                 'photos': 0,
                 'videos': 0,
                 'duplicates': 0,
+                'skipped': 0,
                 'errors': 0,
                 'processed': 0
             }
@@ -302,7 +307,7 @@ class FileProcessor:
                 for source_index, source_path in enumerate(source_paths):
                     tasks.append((source_path, dest_path, source_index, dest_index, 
                                 len(source_paths), len(dest_paths), move_mode, dry_run, 
-                                md5_check, organization_mode))
+                                md5_check, ignore_duplicates, organization_mode))
                 
                 # Use ThreadPoolExecutor for parallel processing
                 # Limit concurrent threads to avoid overwhelming the system
@@ -336,6 +341,7 @@ class FileProcessor:
                                     combined_stats['photos'] += result['stats']['photos']
                                     combined_stats['videos'] += result['stats']['videos']
                                     combined_stats['duplicates'] += result['stats'].get('duplicates', 0)
+                                    combined_stats['skipped'] += result['stats'].get('skipped', 0)
                                     combined_stats['errors'] += result['stats']['errors']
                                     combined_stats['processed'] += result['stats']['processed']
                         except Exception as e:
@@ -351,6 +357,7 @@ class FileProcessor:
             self._safe_log(_("total_photos").format(combined_stats['photos']))
             self._safe_log(_("total_videos").format(combined_stats['videos']))
             self._safe_log(_("total_duplicates").format(combined_stats['duplicates']))
+            self._safe_log(_("total_skipped").format(combined_stats['skipped']))
             self._safe_log(_("total_errors").format(combined_stats['errors']))
             self._safe_log(_("total_processed").format(combined_stats['processed']))
             

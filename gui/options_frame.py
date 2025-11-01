@@ -20,6 +20,7 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
         self.move_mode = tk.BooleanVar()
         self.dry_run = tk.BooleanVar()
         self.md5_check = tk.BooleanVar()
+        self.ignore_duplicates = tk.BooleanVar()
         self.organization_mode = tk.StringVar(value="date")
         
         # Store references to widgets for updating texts
@@ -68,7 +69,17 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
             variable=self.md5_check,
             style='Modern.TCheckbutton'
         )
-        self._widgets['md5_check'].grid(row=2, column=0, sticky=tk.W)
+        self._widgets['md5_check'].grid(row=2, column=0, sticky=tk.W,
+                                       pady=(0, ModernStyle.PADDING_XS))
+        
+        # Ignore duplicates checkbox with compact style
+        self._widgets['ignore_duplicates'] = ttk.Checkbutton(
+            checkbox_frame, 
+            text=_("ignore_duplicates"), 
+            variable=self.ignore_duplicates,
+            style='Modern.TCheckbutton'
+        )
+        self._widgets['ignore_duplicates'].grid(row=3, column=0, sticky=tk.W)
         
         # Right column for organization mode
         org_frame = ttk.Frame(container, style='Surface.TFrame')
@@ -131,6 +142,7 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
             self._widgets['move_mode'].config(text=_("move_mode"))
             self._widgets['dry_run'].config(text=_("dry_run_mode"))
             self._widgets['md5_check'].config(text=_("md5_verification"))
+            self._widgets['ignore_duplicates'].config(text=_("ignore_duplicates"))
             self._widgets['org_mode_label'].config(text=_("organization_mode") + ":")
             self._widgets['mode_date'].config(text=_("org_mode_date"))
             self._widgets['mode_device'].config(text=_("org_mode_device"))
@@ -149,6 +161,10 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
         """Get the MD5 check setting"""
         return self.md5_check.get()
     
+    def get_ignore_duplicates(self):
+        """Get the ignore duplicates setting"""
+        return self.ignore_duplicates.get()
+    
     def get_organization_mode(self):
         """Get the organization mode setting"""
         return self.organization_mode.get()
@@ -164,6 +180,10 @@ class OptionsFrame(ttk.LabelFrame, I18nMixin):
     def set_md5_check(self, value):
         """Set the MD5 check setting"""
         self.md5_check.set(value)
+    
+    def set_ignore_duplicates(self, value):
+        """Set the ignore duplicates setting"""
+        self.ignore_duplicates.set(value)
     
     def set_organization_mode(self, value):
         """Set the organization mode setting"""

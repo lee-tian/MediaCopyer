@@ -245,7 +245,8 @@ def get_target_directory(dest_path: Path, file_path: Path, file_type: str,
 
 def organize_file(file_path: Path, file_type: str, dest_path: Path, 
                  move_mode: bool = False, dry_run: bool = False, 
-                 organization_mode: str = "date", verify_md5: bool = False) -> dict:
+                 organization_mode: str = "date", verify_md5: bool = False,
+                 ignore_duplicates: bool = False) -> dict:
     """
     Organize a single media file.
     
@@ -257,6 +258,7 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
         dry_run: Preview mode, don't actually move/copy files
         organization_mode: Organization mode ('date', 'device', 'date_device')
         verify_md5: Whether to verify file integrity using MD5 checksums
+        ignore_duplicates: Whether to skip duplicate files instead of organizing them
     
     Returns:
         dict: Result with 'success', 'message', 'target_path', 'device_name' (if applicable), 'is_duplicate'
@@ -272,6 +274,17 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
         is_duplicate = False
         if normal_target_path.exists() and is_duplicate_file(file_path, normal_target_path):
             is_duplicate = True
+            
+            # If ignore_duplicates is enabled, skip this file
+            if ignore_duplicates:
+                return {
+                    'success': True,
+                    'message': f"Skipped duplicate file: {file_path.name}",
+                    'target_path': None,
+                    'device_name': None,
+                    'operation': "skipped (duplicate)",
+                    'is_duplicate': True
+                }
         
         # Create target directory structure (normal or duplicate)
         target_dir = get_target_directory(dest_path, file_path, file_type, file_date, organization_mode, is_duplicate=is_duplicate)
@@ -357,7 +370,8 @@ def organize_file(file_path: Path, file_type: str, dest_path: Path,
 
 def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = False,
                         dry_run: bool = False, organization_mode: str = "date",
-                        verify_md5: bool = False, progress_callback=None) -> dict:
+                        verify_md5: bool = False, ignore_duplicates: bool = False,
+                        progress_callback=None) -> dict:
     """
     Organize all media files from source to destination directory.
     
@@ -368,6 +382,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         dry_run: Preview mode, don't actually move/copy files
         organization_mode: Organization mode ('date', 'device', 'date_device', 'extension')
         verify_md5: Whether to verify file integrity using MD5 checksums
+        ignore_duplicates: Whether to skip duplicate files instead of organizing them
         progress_callback: Callback function for progress updates
         
     Returns:
@@ -400,6 +415,7 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
         'videos': 0,
         'other': 0,
         'duplicates': 0,
+        'skipped': 0,
         'errors': 0,
         'devices': set(),
         'results': []
@@ -414,25 +430,30 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
                 break
         
         # Organize the file
-        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode, verify_md5)
+        result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode, verify_md5, ignore_duplicates)
         stats['results'].append(result)
         
         # Update statistics
         if result['success']:
-            stats['processed'] += 1
-            if file_type == 'photo':
-                stats['photos'] += 1
-            elif file_type == 'video':
-                stats['videos'] += 1
-            else:
-                stats['other'] += 1
-            
-            # Track duplicates
-            if result.get('is_duplicate', False):
+            # Check if file was skipped due to ignore_duplicates
+            if result.get('operation') == "skipped (duplicate)":
+                stats['skipped'] += 1
                 stats['duplicates'] += 1
-            
-            if result['device_name']:
-                stats['devices'].add(result['device_name'])
+            else:
+                stats['processed'] += 1
+                if file_type == 'photo':
+                    stats['photos'] += 1
+                elif file_type == 'video':
+                    stats['videos'] += 1
+                else:
+                    stats['other'] += 1
+                
+                # Track duplicates that were still processed (moved to duplicate folder)
+                if result.get('is_duplicate', False):
+                    stats['duplicates'] += 1
+                
+                if result['device_name']:
+                    stats['devices'].add(result['device_name'])
         else:
             stats['errors'] += 1
     

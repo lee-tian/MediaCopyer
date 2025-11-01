@@ -29,6 +29,7 @@ translations = {
     "org_mode_extension": "按文件后缀",
     "dry_run_mode": "试运行模式",
     "md5_verification": "MD5完整性校验",
+    "ignore_duplicates": "忽略重复文件",
     "processing_log": "处理日志",
     "source_directories": "源目录列表",
     "destination_directories": "目标目录列表",
@@ -81,6 +82,7 @@ translations = {
     "move_mode_text": "移动模式",
     "copy_mode_text": "复制模式",
     "dry_run_info": "试运行模式 - 仅预览，不会实际移动或复制文件",
+    "ignore_duplicates_info": "忽略重复文件模式 - 跳过重复文件，不进行处理",
     "no_media_files_found": "未找到媒体文件",
     "found_files_count": "找到 {} 个媒体文件",
     "processing_file_progress": "处理中... ({}/{}) {}",
@@ -202,7 +204,9 @@ translations = {
     
     # Duplicate file handling
     "total_duplicates": "总重复文件数: {}",
+    "total_skipped": "总跳过文件数: {}",
     "parallel_duplicates": "[并行]   重复: {}",
+    "parallel_skipped": "[并行]   跳过: {}",
     
     # Enhanced copy analysis
     "copy_operation_summary": "📋 本次复制操作汇总:",
