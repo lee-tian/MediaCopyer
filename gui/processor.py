@@ -15,7 +15,8 @@ from core.utils import (
     format_size_summary, 
     compare_directories_size,
     estimate_required_space,
-    check_available_space
+    check_available_space,
+    calculate_copy_operation_analysis
 )
 from .i18n import i18n, _, I18nMixin
 
@@ -241,6 +242,15 @@ class FileProcessor:
             if space_warnings and not dry_run:
                 self._safe_log(f"\n" + _("space_warning").format('; '.join(space_warnings)))
             
+            # Capture destination directory sizes before operation (for enhanced analysis)
+            if not dry_run:
+                self._safe_log(f"\n" + "📊 " + _("dest_size_analysis") + " (Before Operation)")
+                self._dest_before_infos = calculate_multiple_directories_size(dest_paths, include_all_files=False)
+                
+                for i, size_info in enumerate(self._dest_before_infos, 1):
+                    self._safe_log(_("dest_dir_info").format(i, size_info.path))
+                    self._safe_log(_("media_files_total").format(size_info.media_files, size_info.media_size / (1024*1024)))
+            
             self._safe_log("="*60)
             self._safe_log(_("start_parallel_processing"))
             self._safe_log("="*60)
@@ -368,7 +378,57 @@ class FileProcessor:
                 self._safe_log(_("total_media_files").format(total_dest_media_files))
                 self._safe_log(_("total_media_size").format(total_dest_media_size / (1024*1024)))
                 
-                # Compare source and destination sizes
+                # Enhanced copy operation analysis
+                if source_size_infos and hasattr(self, '_dest_before_infos') and dest_size_infos:
+                    analysis = calculate_copy_operation_analysis(
+                        source_size_infos, 
+                        self._dest_before_infos, 
+                        dest_size_infos, 
+                        combined_stats, 
+                        move_mode
+                    )
+                    
+                    # Display enhanced analysis
+                    self._safe_log(f"\n" + _("copy_operation_summary"))
+                    self._safe_log(_("files_copied_this_time").format(analysis['operation']['files_copied']))
+                    self._safe_log(_("size_copied_this_time").format(analysis['operation']['size_copied_formatted']))
+                    self._safe_log(_("dest_increase_files").format(analysis['operation']['actual_files_increase']))
+                    self._safe_log(_("dest_increase_size").format(analysis['operation']['actual_size_increase_formatted']))
+                    
+                    self._safe_log(f"\n" + _("dest_before_after"))
+                    self._safe_log(_("dest_before").format(
+                        analysis['destination_before']['files'], 
+                        analysis['destination_before']['size_formatted']
+                    ))
+                    self._safe_log(_("dest_after").format(
+                        analysis['destination_after']['files'], 
+                        analysis['destination_after']['size_formatted']
+                    ))
+                    self._safe_log(_("net_increase").format(
+                        analysis['operation']['actual_files_increase'],
+                        analysis['operation']['actual_size_increase_formatted']
+                    ))
+                    
+                    self._safe_log(f"\n" + _("copy_match_analysis"))
+                    if analysis['operation']['files_match']:
+                        self._safe_log(_("copy_files_match"))
+                    else:
+                        self._safe_log(_("copy_files_mismatch").format(
+                            analysis['operation']['files_copied'],
+                            analysis['operation']['actual_files_increase'],
+                            analysis['operation']['files_difference']
+                        ))
+                    
+                    if analysis['operation']['size_match']:
+                        self._safe_log(_("copy_size_match"))
+                    else:
+                        self._safe_log(_("copy_size_mismatch").format(
+                            analysis['operation']['size_copied_formatted'],
+                            analysis['operation']['actual_size_increase_formatted'],
+                            analysis['operation']['size_difference_formatted']
+                        ))
+                
+                # Traditional comparison for backward compatibility
                 if source_size_infos and dest_size_infos:
                     comparison = compare_directories_size(source_size_infos, dest_size_infos)
                     

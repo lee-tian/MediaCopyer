@@ -9,7 +9,6 @@ and system checks for the MediaCopyer application.
 from .filesystem import (
     validate_directory,
     get_directory_size,
-    check_available_space,
     is_hidden_file,
     count_files_in_directory,
     ensure_directory_exists,
@@ -24,7 +23,9 @@ from .size_calculator import (
     calculate_multiple_directories_size,
     format_size_summary,
     compare_directories_size,
-    estimate_required_space
+    estimate_required_space,
+    check_available_space,
+    calculate_copy_operation_analysis
 )
 
 # Import string utilities
@@ -106,7 +107,6 @@ __all__ = [
     # Filesystem utilities
     'validate_directory',
     'get_directory_size', 
-    'check_available_space',
     'is_hidden_file',
     'count_files_in_directory',
     'ensure_directory_exists',
@@ -119,6 +119,7 @@ __all__ = [
     'format_size_summary',
     'compare_directories_size',
     'estimate_required_space',
+    'calculate_copy_operation_analysis',
     # String utilities
     'format_file_size',
     'safe_filename',

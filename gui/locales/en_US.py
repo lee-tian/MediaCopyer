@@ -200,4 +200,20 @@ translations = {
     # Duplicate file handling
     "total_duplicates": "Total duplicates: {}",
     "parallel_duplicates": "[Parallel]   Duplicates: {}",
+    
+    # Enhanced copy analysis
+    "copy_operation_summary": "📋 Copy Operation Summary:",
+    "files_copied_this_time": "  📤 Files copied this time: {}",
+    "size_copied_this_time": "  💾 Size copied this time: {}",
+    "dest_increase_files": "  📈 Destination files increased by: {}",
+    "dest_increase_size": "  📈 Destination size increased by: {}",
+    "copy_match_analysis": "🔍 Copy Match Analysis:",
+    "copy_files_match": "  ✅ Copied file count matches expected",
+    "copy_files_mismatch": "  ⚠️ Copied file count mismatch: expected {}, actual {}, difference {}",
+    "copy_size_match": "  ✅ Copied size matches expected",
+    "copy_size_mismatch": "  ⚠️ Copied size mismatch: expected {}, actual {}, difference {}",
+    "dest_before_after": "📊 Destination Before/After Comparison:",
+    "dest_before": "  📥 Before copy: {} files, {}",
+    "dest_after": "  📤 After copy: {} files, {}",
+    "net_increase": "  📈 Net increase: {} files, {}",
 }

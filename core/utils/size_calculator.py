@@ -261,3 +261,105 @@ def estimate_required_space(source_infos: List[DirectorySizeInfo],
     else:
         # For copy operations, we need space for each destination
         return total_media_size * num_destinations
+
+def check_available_space(dest_path: Path, required_space: int) -> Tuple[bool, int]:
+    """
+    Check if destination has enough available space
+    
+    Args:
+        dest_path: Destination directory path
+        required_space: Required space in bytes
+    
+    Returns:
+        Tuple of (has_enough_space, available_bytes)
+    """
+    try:
+        import shutil
+        total, used, free = shutil.disk_usage(dest_path)
+        return free >= required_space, free
+    except Exception:
+        # If we can't check, assume there's enough space
+        return True, 0
+
+
+def calculate_copy_operation_analysis(source_infos: List[DirectorySizeInfo], 
+                                    dest_before_infos: List[DirectorySizeInfo],
+                                    dest_after_infos: List[DirectorySizeInfo],
+                                    processed_stats: Dict,
+                                    move_mode: bool = False) -> Dict:
+    """
+    Analyze the copy operation by comparing before/after states
+    
+    Args:
+        source_infos: Source directory size information
+        dest_before_infos: Destination directory size information before operation
+        dest_after_infos: Destination directory size information after operation
+        processed_stats: Statistics from the processing operation
+        move_mode: Whether files were moved (not copied)
+    
+    Returns:
+        Dictionary with detailed copy operation analysis
+    """
+    from .string_utils import format_file_size
+    
+    # Calculate source totals
+    total_source_files = sum(info.media_files for info in source_infos)
+    total_source_size = sum(info.media_size for info in source_infos)
+    
+    # Calculate destination totals before and after
+    dest_before_files = sum(info.media_files for info in dest_before_infos)
+    dest_before_size = sum(info.media_size for info in dest_before_infos)
+    
+    dest_after_files = sum(info.media_files for info in dest_after_infos)
+    dest_after_size = sum(info.media_size for info in dest_after_infos)
+    
+    # Calculate actual increases
+    actual_files_increase = dest_after_files - dest_before_files
+    actual_size_increase = dest_after_size - dest_before_size
+    
+    # Calculate expected values
+    num_destinations = len(dest_after_infos)
+    if move_mode:
+        # For move mode, expect files to be distributed across destinations
+        expected_files_copied = processed_stats.get('processed', 0)
+        expected_size_copied = total_source_size  # Approximate
+    else:
+        # For copy mode, expect files to be copied to each destination
+        expected_files_copied = processed_stats.get('processed', 0)
+        expected_size_copied = total_source_size * num_destinations  # Approximate
+    
+    # Determine if the operation matches expectations
+    files_match = abs(actual_files_increase - expected_files_copied) <= (processed_stats.get('errors', 0) + processed_stats.get('duplicates', 0))
+    size_match = abs(actual_size_increase - expected_size_copied) <= (expected_size_copied * 0.1)  # 10% tolerance
+    
+    return {
+        'source': {
+            'files': total_source_files,
+            'size': total_source_size,
+            'size_formatted': format_file_size(total_source_size)
+        },
+        'destination_before': {
+            'files': dest_before_files,
+            'size': dest_before_size,
+            'size_formatted': format_file_size(dest_before_size)
+        },
+        'destination_after': {
+            'files': dest_after_files,
+            'size': dest_after_size,
+            'size_formatted': format_file_size(dest_after_size)
+        },
+        'operation': {
+            'files_copied': expected_files_copied,
+            'size_copied': expected_size_copied,
+            'size_copied_formatted': format_file_size(expected_size_copied),
+            'actual_files_increase': actual_files_increase,
+            'actual_size_increase': actual_size_increase,
+            'actual_size_increase_formatted': format_file_size(actual_size_increase),
+            'files_match': files_match,
+            'size_match': size_match,
+            'files_difference': actual_files_increase - expected_files_copied,
+            'size_difference': actual_size_increase - expected_size_copied,
+            'size_difference_formatted': format_file_size(abs(actual_size_increase - expected_size_copied))
+        },
+        'processed_stats': processed_stats
+    }

@@ -203,4 +203,20 @@ translations = {
     # Duplicate file handling
     "total_duplicates": "总重复文件数: {}",
     "parallel_duplicates": "[并行]   重复: {}",
+    
+    # Enhanced copy analysis
+    "copy_operation_summary": "📋 本次复制操作汇总:",
+    "files_copied_this_time": "  📤 本次复制文件数: {}",
+    "size_copied_this_time": "  💾 本次复制大小: {}",
+    "dest_increase_files": "  📈 目标目录增加文件: {}",
+    "dest_increase_size": "  📈 目标目录增加大小: {}",
+    "copy_match_analysis": "🔍 复制匹配分析:",
+    "copy_files_match": "  ✅ 复制文件数匹配预期",
+    "copy_files_mismatch": "  ⚠️ 复制文件数不匹配: 预期 {}, 实际 {}, 差异 {}",
+    "copy_size_match": "  ✅ 复制大小匹配预期",
+    "copy_size_mismatch": "  ⚠️ 复制大小不匹配: 预期 {}, 实际 {}, 差异 {}",
+    "dest_before_after": "📊 目标目录前后对比:",
+    "dest_before": "  📥 复制前: {} 个文件, {}",
+    "dest_after": "  📤 复制后: {} 个文件, {}",
+    "net_increase": "  📈 净增加: {} 个文件, {}",
 }
