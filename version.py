@@ -4,8 +4,8 @@
 MediaCopyer 版本信息
 """
 
-__version__ = "1.0.0"
-__build__ = "20241101"
+__version__ = "1.1.1"
+__build__ = "20251101"
 __author__ = "MediaCopyer Team"
 __description__ = "A Python application to automatically organize photos and videos by their creation date"
 
@@ -22,6 +22,50 @@ VERSION_HISTORY = {
             "支持预览模式（dry-run）",
             "自动处理重复文件名",
             "支持多种图片和视频格式"
+        ]
+    },
+    "1.1.0": {
+        "date": "2025-11-01",
+        "changes": [
+            "添加忽略重复文件选项",
+            "增强了复制操作分析功能", 
+            "显示详细的文件复制统计信息",
+            "支持跳过重复文件而不是移动到重复文件夹"
+        ]
+    },
+    "1.1.1": {
+        "date": "2025-11-01",
+        "changes": [
+            "[",
+            """,
+            "A",
+            "d",
+            "d",
+            " ",
+            "D",
+            "u",
+            "p",
+            "l",
+            "i",
+            "c",
+            "a",
+            "t",
+            "e",
+            " ",
+            "r",
+            "e",
+            "m",
+            "o",
+            "v",
+            "a",
+            "l",
+            " ",
+            "m",
+            "o",
+            "d",
+            "e",
+            """,
+            "]"
         ]
     }
 }
