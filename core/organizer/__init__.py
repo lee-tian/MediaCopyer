@@ -111,19 +111,19 @@ def get_target_directory(dest_path: Path, file_path: Path, file_type: str,
             base_dir = dest_path / 'Other'
         
         if organization_mode == "date":
-            # Mode 1: Video/2025/2025-07-25
-            target_dir = base_dir / year / date_str
+            # Mode 1: Video/2025-07-25
+            target_dir = base_dir / date_str
         elif organization_mode == "device":
-            # Mode 2: Video/2025/DJI
+            # Mode 2: Video/DJI
             device_name = get_device_name(str(file_path), file_type)
-            target_dir = base_dir / year / device_name
+            target_dir = base_dir / device_name
         elif organization_mode == "date_device":
-            # Mode 3: Video/2025/2025-07-25/DJI
+            # Mode 3: Video/2025-07-25/DJI
             device_name = get_device_name(str(file_path), file_type)
-            target_dir = base_dir / year / date_str / device_name
+            target_dir = base_dir / date_str / device_name
         else:
             # Default to date mode if unknown mode
-            target_dir = base_dir / year / date_str
+            target_dir = base_dir / date_str
     
     return target_dir
 
@@ -278,7 +278,10 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
     for i, (file_path, file_type) in enumerate(files_to_process):
         # Update progress if callback provided
         if progress_callback:
-            progress_callback(i + 1, len(files_to_process), file_path.name)
+            # Check if callback returns False (cancel requested)
+            if progress_callback(i + 1, len(files_to_process), file_path.name) is False:
+                # Cancel requested, break out of loop
+                break
         
         # Organize the file
         result = organize_file(file_path, file_type, dest_dir, move_mode, dry_run, organization_mode, verify_md5)
