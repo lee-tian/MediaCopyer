@@ -371,7 +371,8 @@ class MediaCopyerApp:
     
     def _update_title(self):
         """Update window title"""
-        self.root.title(_("app_title"))
+        from version import get_app_name
+        self.root.title(get_app_name())
     
     def _update_texts(self):
         """Update all UI texts when language changes"""

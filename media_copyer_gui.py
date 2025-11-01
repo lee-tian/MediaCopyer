@@ -7,6 +7,7 @@ Main entry point that imports from the new modular GUI structure
 from gui import MediaCopyerApp
 from gui.main_window import create_app
 from gui.i18n import i18n
+from version import get_app_name, get_full_version
 
 def main():
     """Main function to run the GUI application"""

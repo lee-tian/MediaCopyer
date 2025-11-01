@@ -14,22 +14,42 @@ A Python application to automatically organize photos and videos by their creati
 - **Internationalization**: Supports multiple languages (English and Chinese)
 - **Modular Architecture**: Clean, maintainable code structure for easy development
 
-## Installation
+## Download
 
-### For Users
+### Pre-built Applications (Recommended)
+
+Download the latest version from GitHub Releases:
+
+**[📥 Download Latest Release](https://github.com/YOUR_USERNAME/MediaCopyer/releases/latest)**
+
+- **macOS**: Download `MediaCopyer-v1.0.0.dmg`
+- **Windows**: Download `MediaCopyer-v1.0.0.exe` (coming soon)
+- **Linux**: Download `MediaCopyer-v1.0.0.AppImage` (coming soon)
+
+> **Note**: Replace `YOUR_USERNAME` with your actual GitHub username in the download links.
+
+### Installation from Source
+
+#### For Users
 
 1. Clone or download this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/YOUR_USERNAME/MediaCopyer.git
    cd MediaCopyer
    ```
 
-2. Install dependencies:
+2. Create and activate virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Optional**: Install ffmpeg for enhanced video metadata support:
+4. **Optional**: Install ffmpeg for enhanced video metadata support:
    - macOS: `brew install ffmpeg`
    - Ubuntu/Debian: `sudo apt install ffmpeg`
    - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
@@ -226,6 +246,49 @@ black .
 - Processing errors are logged but don't stop the overall operation
 - GUI provides real-time error reporting and progress updates
 - Statistics are provided at the end of processing
+
+## Release Management
+
+### For Maintainers
+
+#### Updating Version
+
+1. Update version number and add changelog:
+   ```bash
+   python update_version.py 1.1.0 "Fixed duplicate file handling bug" "Added new file format support"
+   ```
+
+2. Build and release:
+   ```bash
+   python release.py
+   ```
+
+3. The release script will:
+   - Build the application
+   - Create Git tags
+   - Prepare release assets
+   - Push to GitHub
+
+4. Complete the release on GitHub:
+   - Go to GitHub Releases page
+   - Edit the created tag
+   - Upload the DMG file from `release-v{version}/` directory
+   - Publish the release
+
+#### Manual Build
+
+To build the application manually:
+```bash
+# Activate virtual environment
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Build application
+python build_app.py
+```
+
+This will create:
+- `dist/MediaCopyer.app` - macOS application bundle
+- `MediaCopyer-v{version}.dmg` - macOS installer
 
 ## Contributing
 
