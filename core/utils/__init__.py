@@ -17,6 +17,16 @@ from .filesystem import (
     create_directory_structure
 )
 
+# Import size calculation utilities
+from .size_calculator import (
+    DirectorySizeInfo,
+    calculate_directory_size_detailed,
+    calculate_multiple_directories_size,
+    format_size_summary,
+    compare_directories_size,
+    estimate_required_space
+)
+
 # Import string utilities
 from .string_utils import (
     format_file_size,
@@ -102,6 +112,13 @@ __all__ = [
     'ensure_directory_exists',
     'get_relative_path',
     'create_directory_structure',
+    # Size calculation utilities
+    'DirectorySizeInfo',
+    'calculate_directory_size_detailed',
+    'calculate_multiple_directories_size',
+    'format_size_summary',
+    'compare_directories_size',
+    'estimate_required_space',
     # String utilities
     'format_file_size',
     'safe_filename',

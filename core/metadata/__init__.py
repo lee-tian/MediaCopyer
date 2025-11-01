@@ -16,6 +16,12 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
+try:
+    import exifread
+    EXIFREAD_AVAILABLE = True
+except ImportError:
+    EXIFREAD_AVAILABLE = False
+
 
 # File extension constants
 PHOTO_EXTENSIONS = {
@@ -74,8 +80,104 @@ PHOTO_EXTENSIONS = {
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp', '.mts', '.m2ts'}
 
 
+def get_creation_date_from_exiftool(file_path: str) -> Optional[datetime]:
+    """Extract creation date using exiftool as fallback"""
+    try:
+        cmd = ['exiftool', '-DateTimeOriginal', '-DateTime', '-CreateDate', '-j', file_path]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            if data and len(data) > 0:
+                file_data = data[0]
+                
+                # Try different date fields
+                date_fields = ['DateTimeOriginal', 'DateTime', 'CreateDate']
+                for field in date_fields:
+                    if field in file_data:
+                        date_str = file_data[field]
+                        try:
+                            return datetime.strptime(date_str, '%Y:%m:%d %H:%M:%S')
+                        except ValueError:
+                            continue
+                            
+    except (subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
+        pass
+    
+    return None
+
+
+def get_creation_date_from_exif_raw(file_path: str) -> Optional[datetime]:
+    """Extract creation date from RAW image files using exifread"""
+    # Skip system files to avoid unnecessary warnings
+    filename = Path(file_path).name
+    if filename.startswith('._') or filename.startswith('.'):
+        return None
+        
+    if not EXIFREAD_AVAILABLE:
+        # Try exiftool as fallback if exifread not available
+        return get_creation_date_from_exiftool(file_path)
+    
+    try:
+        with open(file_path, 'rb') as f:
+            # Process file without stopping early to get more tags
+            tags = exifread.process_file(f, details=False)
+            
+            if not tags:
+                # Only show warnings for actual image files, not system files
+                if not filename.startswith('._'):
+                    print(f"Warning: No EXIF tags found in {file_path} with exifread, trying exiftool...")
+                return get_creation_date_from_exiftool(file_path)
+            
+            # Try different date tags in order of preference
+            date_tags = [
+                'EXIF DateTimeOriginal',
+                'EXIF DateTime', 
+                'Image DateTime',
+                'EXIF DateTimeDigitized'
+            ]
+            
+            for tag_name in date_tags:
+                if tag_name in tags:
+                    date_str = str(tags[tag_name]).strip()
+                    try:
+                        return datetime.strptime(date_str, '%Y:%m:%d %H:%M:%S')
+                    except ValueError as ve:
+                        if not filename.startswith('._'):
+                            print(f"Warning: Could not parse date '{date_str}' from tag {tag_name}: {ve}")
+                        continue
+            
+            # If no date found with exifread, try exiftool
+            if not filename.startswith('._'):
+                print(f"No date found in EXIF tags with exifread, trying exiftool for {filename}")
+            return get_creation_date_from_exiftool(file_path)
+                        
+    except Exception as e:
+        # Only show warnings for actual image files, not system files
+        if not filename.startswith('._'):
+            print(f"Warning: Could not read EXIF from RAW file {file_path} with exifread: {e}")
+            print(f"Trying exiftool as fallback...")
+        return get_creation_date_from_exiftool(file_path)
+    
+    return None
+
+
 def get_creation_date_from_exif(file_path: str) -> Optional[datetime]:
     """Extract creation date from image EXIF data"""
+    # Skip system files to avoid unnecessary warnings
+    filename = Path(file_path).name
+    if filename.startswith('._') or filename.startswith('.'):
+        return None
+    
+    # Check if this is a RAW file that PIL can't handle
+    ext = Path(file_path).suffix.lower()
+    raw_extensions = {'.arw', '.cr2', '.cr3', '.nef', '.nrw', '.raf', '.orf', '.rw2', '.pef', '.x3f', '.3fr', '.iiq', '.mef', '.dcr', '.mrw', '.bay', '.erf'}
+    
+    if ext in raw_extensions:
+        # Use exifread for RAW files
+        return get_creation_date_from_exif_raw(file_path)
+    
+    # Use PIL for standard formats
     if not PIL_AVAILABLE:
         return None
     
@@ -88,7 +190,12 @@ def get_creation_date_from_exif(file_path: str) -> Optional[datetime]:
                     if tag_name == 'DateTimeOriginal' or tag_name == 'DateTime':
                         return datetime.strptime(value, '%Y:%m:%d %H:%M:%S')
     except Exception as e:
-        print(f"Warning: Could not read EXIF from {file_path}: {e}")
+        # Only show warnings for actual image files, not system files
+        if not filename.startswith('._'):
+            print(f"Warning: PIL could not read EXIF from {file_path}: {e}")
+            if EXIFREAD_AVAILABLE:
+                print(f"Trying exifread as fallback for {file_path}")
+                return get_creation_date_from_exif_raw(file_path)
     
     return None
 
@@ -185,10 +292,24 @@ def is_pil_available() -> bool:
     return PIL_AVAILABLE
 
 
+def is_exifread_available() -> bool:
+    """Check if exifread is available"""
+    return EXIFREAD_AVAILABLE
+
+
 def check_ffprobe_available() -> bool:
     """Check if ffprobe is available"""
     try:
         subprocess.run(['ffprobe', '-version'], capture_output=True, check=True)
+        return True
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
+def check_exiftool_available() -> bool:
+    """Check if exiftool is available"""
+    try:
+        subprocess.run(['exiftool', '-ver'], capture_output=True, check=True)
         return True
     except (subprocess.SubprocessError, FileNotFoundError):
         return False

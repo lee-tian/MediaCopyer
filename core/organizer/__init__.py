@@ -13,6 +13,69 @@ from ..metadata import get_file_type, get_file_date
 from ..device import get_device_name
 
 
+def _should_skip_file(filename: str) -> bool:
+    """Check if a file should be skipped (system files, hidden files, etc.)"""
+    # Skip hidden files (starting with .)
+    if filename.startswith('.'):
+        return True
+    
+    # Skip macOS resource fork files (starting with ._)
+    if filename.startswith('._'):
+        return True
+    
+    # Skip other common system files
+    system_files = {
+        'Thumbs.db',      # Windows thumbnails
+        'Desktop.ini',    # Windows folder settings
+        '.DS_Store',      # macOS folder settings
+        '__MACOSX',       # macOS archive metadata
+        'desktop.ini',    # Windows (case variation)
+    }
+    
+    if filename in system_files:
+        return True
+    
+    return False
+
+
+def _cleanup_empty_directories(base_path: Path) -> int:
+    """Remove empty directories recursively, returns count of removed directories"""
+    removed_count = 0
+    
+    try:
+        # Walk through directories bottom-up to handle nested empty directories
+        for root, dirs, files in os.walk(base_path, topdown=False):
+            root_path = Path(root)
+            
+            # Skip the base directory itself
+            if root_path == base_path:
+                continue
+                
+            try:
+                # Check if directory is empty (no files and no subdirectories)
+                if not files and not dirs:
+                    root_path.rmdir()
+                    removed_count += 1
+                    # Import here to avoid circular imports
+                    try:
+                        from gui.i18n import _
+                        print(_("removed_empty_directory").format(root_path))
+                    except ImportError:
+                        print(f"Removed empty directory: {root_path}")
+            except OSError:
+                # Directory not empty or permission error, skip
+                pass
+                
+    except Exception as e:
+        try:
+            from gui.i18n import _
+            print(_("warning_empty_dir_cleanup").format(e))
+        except ImportError:
+            print(f"Warning: Error during empty directory cleanup: {e}")
+    
+    return removed_count
+
+
 def calculate_md5(file_path: Path) -> str:
     """Calculate MD5 hash of a file"""
     hash_md5 = hashlib.md5()
@@ -41,6 +104,10 @@ def scan_directory(source_dir: Path) -> List[Tuple[Path, str]]:
     
     for root, dirs, files in os.walk(source_dir):
         for file in files:
+            # Skip system files and hidden files
+            if _should_skip_file(file):
+                continue
+                
             file_path = Path(root) / file
             file_type = get_file_type(str(file_path))
             
@@ -58,7 +125,7 @@ def scan_all_files(source_dir: Path) -> List[Tuple[Path, str]]:
         for file in files:
             file_path = Path(root) / file
             # Skip hidden files and system files
-            if not file.startswith('.'):
+            if not _should_skip_file(file):
                 file_type = get_file_type(str(file_path))
                 # For extension mode, we still track if it's a known media type
                 # but include all files
@@ -301,5 +368,15 @@ def organize_media_files(source_dir: Path, dest_dir: Path, move_mode: bool = Fal
                 stats['devices'].add(result['device_name'])
         else:
             stats['errors'] += 1
+    
+    # Clean up empty directories after processing (only if not dry run)
+    if not dry_run and stats['processed'] > 0:
+        removed_dirs = _cleanup_empty_directories(dest_dir)
+        if removed_dirs > 0:
+            try:
+                from gui.i18n import _
+                print(_("cleaned_up_empty_directories").format(removed_dirs))
+            except ImportError:
+                print(f"Cleaned up {removed_dirs} empty directories")
     
     return stats
