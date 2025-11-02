@@ -223,4 +223,128 @@ translations = {
     "dest_before": "  📥 复制前: {} 个文件, {}",
     "dest_after": "  📤 复制后: {} 个文件, {}",
     "net_increase": "  📈 净增加: {} 个文件, {}",
+    
+    # Menu items
+    "help_menu": "帮助",
+    "window_menu": "窗口",
+    "user_guide": "用户指南",
+    "keyboard_shortcuts": "快捷键",
+    "report_issue": "报告问题",
+    "check_updates": "检查更新",
+    "about": "关于",
+    "close": "关闭",
+    
+    # About dialog
+    "app_name": "应用名称",
+    "version": "版本",
+    "author": "作者",
+    "description": "描述",
+    "features": "功能特性",
+    "feature_auto_organize": "自动按日期整理照片和视频",
+    "feature_date_based": "基于EXIF数据的智能日期识别",
+    "feature_duplicate_handling": "智能重复文件处理",
+    "feature_preview_mode": "预览模式（试运行）",
+    "feature_multilingual": "多语言支持（中文/英文）",
+    "feature_batch_processing": "批量处理多个目录",
+    "supported_formats": "支持格式",
+    "image_formats": "图片格式",
+    "video_formats": "视频格式",
+    "license": "许可证",
+    
+    # User guide content
+    "user_guide_content": """MediaCopyer 用户指南
+
+📋 基本使用步骤：
+
+1. 选择源目录
+   • 点击"添加源目录"按钮选择包含照片和视频的文件夹
+   • 可以添加多个源目录进行批量处理
+   • 支持从SD卡、相机、手机等设备导入
+
+2. 选择目标目录
+   • 点击"添加目录"按钮选择整理后文件的存放位置
+   • 可以添加多个目标目录，文件会复制到所有目标
+   • 建议选择有足够空间的目录
+
+3. 配置选项
+   • 组织方式：选择按日期、设备或文件类型整理
+   • 移动模式：勾选后会移动文件而不是复制
+   • 试运行：勾选后只预览不实际操作文件
+   • MD5校验：确保文件完整性
+   • 忽略重复：跳过已存在的重复文件
+
+4. 开始处理
+   • 点击"开始执行"切换到执行界面
+   • 查看进度和详细日志
+   • 处理完成后查看统计信息
+
+🔧 高级功能：
+
+• 多目录并行处理：同时处理多个源目录到多个目标
+• 智能日期识别：从EXIF数据、文件名、修改时间提取日期
+• 重复文件检测：基于MD5哈希值识别重复文件
+• 空间检查：自动检查目标目录可用空间
+• 详细统计：显示处理的文件数量、大小等信息
+
+📁 文件组织结构：
+
+按日期组织：
+  Photos/2025/2025-01-15/
+  Videos/2025/2025-01-15/
+
+按设备组织：
+  Photos/iPhone/
+  Videos/DJI/
+
+按日期+设备：
+  Photos/2025/2025-01-15/iPhone/
+  Videos/2025/2025-01-15/DJI/
+
+按文件类型：
+  jpg/
+  mp4/
+  mov/
+
+⚠️ 注意事项：
+
+• 首次使用建议开启"试运行"模式预览结果
+• 移动模式会删除源文件，请谨慎使用
+• 处理大量文件时建议先检查目标目录空间
+• 建议定期备份重要文件
+
+💡 使用技巧：
+
+• 使用"记住上次目录"功能快速重复操作
+• 添加常用目录到收藏夹
+• 查看详细日志了解处理过程
+• 使用多语言界面（中文/英文）""",
+    
+    # Keyboard shortcuts content
+    "shortcuts_content": """MediaCopyer 快捷键
+
+⌨️ 通用快捷键：
+• Ctrl+Q / Cmd+Q：退出应用
+• Ctrl+, / Cmd+,：打开设置
+• F1：显示帮助
+• F5：刷新界面
+
+📁 目录操作：
+• Ctrl+O / Cmd+O：选择源目录
+• Ctrl+Shift+O / Cmd+Shift+O：选择目标目录
+• Delete：删除选中的目录
+
+▶️ 处理操作：
+• Ctrl+Enter / Cmd+Enter：开始处理
+• Escape：停止处理
+• Ctrl+L / Cmd+L：清空日志
+
+🔄 界面切换：
+• Ctrl+1 / Cmd+1：切换到设置标签
+• Ctrl+2 / Cmd+2：切换到执行标签
+• Tab：在控件间切换焦点
+
+📋 其他：
+• Ctrl+C / Cmd+C：复制日志内容
+• Ctrl+A / Cmd+A：全选日志内容
+• Ctrl+F / Cmd+F：在日志中查找""",
 }

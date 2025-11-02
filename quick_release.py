@@ -2,145 +2,121 @@
 # -*- coding: utf-8 -*-
 """
 MediaCopyer 快速发布脚本
-提供常见发布场景的快捷命令
+一键构建、标签、推送和发布到GitHub Releases
 """
 
+import os
 import sys
 import subprocess
-import os
+import argparse
+from version import get_version
 
-def show_menu():
-    """显示发布菜单"""
-    print("MediaCopyer 快速发布菜单")
-    print("=" * 40)
-    print("1. 🐛 Bug修复版本 (补丁版本 x.y.Z)")
-    print("2. ✨ 功能更新版本 (次版本 x.Y.z)")
-    print("3. 🚀 重大更新版本 (主版本 X.y.z)")
-    print("4. 🔨 仅构建当前版本")
-    print("5. 📝 自定义版本")
-    print("0. 退出")
-    print()
-
-def get_current_version():
-    """获取当前版本"""
+def run_command(cmd, description=""):
+    """运行命令并处理错误"""
+    if description:
+        print(f"🔄 {description}...")
+    
     try:
-        from version import get_version
-        return get_version()
-    except ImportError:
-        return "1.0.0"
+        result = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
+        if description:
+            print(f"✅ {description}完成")
+        return True, result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"❌ {description}失败: {e.stderr}")
+        return False, e.stderr
 
-def increment_version(current_version, version_type):
-    """递增版本号"""
-    parts = current_version.split('.')
-    major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+def check_prerequisites():
+    """检查发布前提条件"""
+    print("🔍 检查发布前提条件...")
     
-    if version_type == 'patch':
-        patch += 1
-    elif version_type == 'minor':
-        minor += 1
-        patch = 0
-    elif version_type == 'major':
-        major += 1
-        minor = 0
-        patch = 0
+    # 检查是否在git仓库中
+    if not os.path.exists('.git'):
+        print("❌ 当前目录不是git仓库")
+        return False
     
-    return f"{major}.{minor}.{patch}"
-
-def get_changes_input():
-    """获取更新内容输入"""
-    print("\n请输入更新内容 (每行一个，空行结束):")
-    changes = []
-    while True:
-        change = input("- ").strip()
-        if not change:
-            break
-        changes.append(change)
-    return changes
-
-def run_build_and_release(version, changes, options=None):
-    """运行构建和发布脚本"""
-    cmd = ['python', 'build_and_release.py', version]
+    # 检查是否有未提交的更改
+    success, output = run_command("git status --porcelain")
+    if not success:
+        return False
     
-    if options:
-        cmd.extend(options)
+    if output.strip():
+        print("⚠️ 有未提交的更改:")
+        print(output)
+        response = input("是否继续? (y/N): ")
+        if response.lower() != 'y':
+            return False
     
-    if changes:
-        cmd.extend(changes)
+    # 检查GitHub CLI
+    success, _ = run_command("gh --version")
+    if not success:
+        print("⚠️ GitHub CLI未安装，将使用手动发布模式")
+        print("💡 安装GitHub CLI以启用自动发布: https://cli.github.com/")
+        return "manual"
     
-    print(f"\n执行命令: {' '.join(cmd)}")
-    print("=" * 50)
+    # 检查GitHub认证
+    success, _ = run_command("gh auth status")
+    if not success:
+        print("⚠️ GitHub CLI未认证")
+        print("💡 请运行: gh auth login")
+        return "manual"
     
-    result = subprocess.run(cmd)
-    return result.returncode == 0
+    print("✅ 所有前提条件满足")
+    return True
 
 def main():
     """主函数"""
-    if not os.path.exists('build_and_release.py'):
-        print("❌ 未找到 build_and_release.py 脚本")
-        print("请确保在正确的项目目录中运行此脚本")
+    parser = argparse.ArgumentParser(description='MediaCopyer 快速发布脚本')
+    parser.add_argument('--auto', action='store_true', help='自动模式，不询问确认')
+    parser.add_argument('--build-only', action='store_true', help='仅构建，不发布')
+    args = parser.parse_args()
+    
+    version = get_version()
+    print(f"🚀 MediaCopyer v{version} 快速发布")
+    print("=" * 50)
+    
+    # 检查前提条件
+    prereq_result = check_prerequisites()
+    if prereq_result is False:
         sys.exit(1)
     
-    current_version = get_current_version()
+    auto_release = prereq_result is True
     
-    while True:
-        print(f"\n当前版本: {current_version}")
-        show_menu()
+    if not args.auto and not args.build_only:
+        print(f"\n📋 发布信息:")
+        print(f"版本: v{version}")
+        print(f"模式: {'自动发布' if auto_release else '手动发布'}")
         
-        try:
-            choice = input("请选择 (0-5): ").strip()
-            
-            if choice == '0':
-                print("👋 再见!")
-                break
-            
-            elif choice == '1':
-                # Bug修复版本
-                new_version = increment_version(current_version, 'patch')
-                print(f"\n🐛 Bug修复版本: {current_version} → {new_version}")
-                changes = get_changes_input()
-                if run_build_and_release(new_version, changes):
-                    current_version = new_version
-            
-            elif choice == '2':
-                # 功能更新版本
-                new_version = increment_version(current_version, 'minor')
-                print(f"\n✨ 功能更新版本: {current_version} → {new_version}")
-                changes = get_changes_input()
-                if run_build_and_release(new_version, changes):
-                    current_version = new_version
-            
-            elif choice == '3':
-                # 重大更新版本
-                new_version = increment_version(current_version, 'major')
-                print(f"\n🚀 重大更新版本: {current_version} → {new_version}")
-                changes = get_changes_input()
-                if run_build_and_release(new_version, changes):
-                    current_version = new_version
-            
-            elif choice == '4':
-                # 仅构建
-                print(f"\n🔨 仅构建当前版本: {current_version}")
-                run_build_and_release(current_version, [], ['--build-only', '--skip-build'])
-            
-            elif choice == '5':
-                # 自定义版本
-                new_version = input(f"\n请输入新版本号 (当前: {current_version}): ").strip()
-                if not new_version:
-                    continue
-                
-                print(f"📝 自定义版本: {current_version} → {new_version}")
-                changes = get_changes_input()
-                if run_build_and_release(new_version, changes):
-                    current_version = new_version
-            
-            else:
-                print("❌ 无效选择，请重新输入")
-        
-        except KeyboardInterrupt:
-            print("\n\n👋 用户中断，再见!")
-            break
-        except Exception as e:
-            print(f"\n❌ 发生错误: {e}")
+        response = input("\n是否继续发布? (y/N): ")
+        if response.lower() != 'y':
+            print("发布已取消")
+            sys.exit(0)
+    
+    # 步骤1: 构建应用
+    success, _ = run_command("python build_app.py", "构建应用")
+    if not success:
+        sys.exit(1)
+    
+    if args.build_only:
+        print("✅ 构建完成")
+        sys.exit(0)
+    
+    # 步骤2: 运行完整发布脚本
+    if auto_release:
+        print("🚀 启动自动发布...")
+        success, _ = run_command("python release.py", "自动发布")
+    else:
+        print("📋 启动手动发布...")
+        success, _ = run_command("python release.py", "准备手动发布")
+    
+    if success:
+        print(f"\n🎉 发布流程完成!")
+        if auto_release:
+            print(f"🔗 Release URL: https://github.com/lee-tian/MediaCopyer/releases/tag/v{version}")
+        else:
+            print(f"📝 请按照提示完成手动发布步骤")
+    else:
+        print("❌ 发布失败")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

@@ -220,4 +220,128 @@ translations = {
     "dest_before": "  📥 Before copy: {} files, {}",
     "dest_after": "  📤 After copy: {} files, {}",
     "net_increase": "  📈 Net increase: {} files, {}",
+    
+    # Menu items
+    "help_menu": "Help",
+    "window_menu": "Window",
+    "user_guide": "User Guide",
+    "keyboard_shortcuts": "Keyboard Shortcuts",
+    "report_issue": "Report Issue",
+    "check_updates": "Check for Updates",
+    "about": "About",
+    "close": "Close",
+    
+    # About dialog
+    "app_name": "Application Name",
+    "version": "Version",
+    "author": "Author",
+    "description": "Description",
+    "features": "Features",
+    "feature_auto_organize": "Automatically organize photos and videos by date",
+    "feature_date_based": "Smart date recognition based on EXIF data",
+    "feature_duplicate_handling": "Intelligent duplicate file handling",
+    "feature_preview_mode": "Preview mode (dry run)",
+    "feature_multilingual": "Multi-language support (Chinese/English)",
+    "feature_batch_processing": "Batch processing of multiple directories",
+    "supported_formats": "Supported Formats",
+    "image_formats": "Image Formats",
+    "video_formats": "Video Formats",
+    "license": "License",
+    
+    # User guide content
+    "user_guide_content": """MediaCopyer User Guide
+
+📋 Basic Usage Steps:
+
+1. Select Source Directories
+   • Click "Add Source" button to select folders containing photos and videos
+   • You can add multiple source directories for batch processing
+   • Supports importing from SD cards, cameras, phones, etc.
+
+2. Select Destination Directories
+   • Click "Add Destination" button to select where organized files will be stored
+   • You can add multiple destination directories to copy files to all targets
+   • Recommend selecting directories with sufficient space
+
+3. Configure Options
+   • Organization Mode: Choose to organize by date, device, or file type
+   • Move Mode: Check to move files instead of copying
+   • Dry Run: Check to preview without actually operating on files
+   • MD5 Verification: Ensure file integrity
+   • Ignore Duplicates: Skip existing duplicate files
+
+4. Start Processing
+   • Click "Go to Execution" to switch to execution interface
+   • View progress and detailed logs
+   • Check statistics after processing completes
+
+🔧 Advanced Features:
+
+• Multi-directory parallel processing: Process multiple sources to multiple destinations simultaneously
+• Smart date recognition: Extract dates from EXIF data, filenames, modification times
+• Duplicate file detection: Identify duplicates based on MD5 hash values
+• Space checking: Automatically check available space in destination directories
+• Detailed statistics: Show number of processed files, sizes, etc.
+
+📁 File Organization Structure:
+
+By Date:
+  Photos/2025/2025-01-15/
+  Videos/2025/2025-01-15/
+
+By Device:
+  Photos/iPhone/
+  Videos/DJI/
+
+By Date+Device:
+  Photos/2025/2025-01-15/iPhone/
+  Videos/2025/2025-01-15/DJI/
+
+By File Type:
+  jpg/
+  mp4/
+  mov/
+
+⚠️ Important Notes:
+
+• First-time users should enable "Dry Run" mode to preview results
+• Move mode will delete source files, use with caution
+• Check destination directory space before processing large amounts of files
+• Regularly backup important files
+
+💡 Usage Tips:
+
+• Use "Remember last directories" feature for quick repeated operations
+• Add frequently used directories to favorites
+• Check detailed logs to understand the processing
+• Use multi-language interface (Chinese/English)""",
+    
+    # Keyboard shortcuts content
+    "shortcuts_content": """MediaCopyer Keyboard Shortcuts
+
+⌨️ General Shortcuts:
+• Ctrl+Q / Cmd+Q: Quit application
+• Ctrl+, / Cmd+,: Open preferences
+• F1: Show help
+• F5: Refresh interface
+
+📁 Directory Operations:
+• Ctrl+O / Cmd+O: Select source directory
+• Ctrl+Shift+O / Cmd+Shift+O: Select destination directory
+• Delete: Remove selected directory
+
+▶️ Processing Operations:
+• Ctrl+Enter / Cmd+Enter: Start processing
+• Escape: Stop processing
+• Ctrl+L / Cmd+L: Clear log
+
+🔄 Interface Navigation:
+• Ctrl+1 / Cmd+1: Switch to Settings tab
+• Ctrl+2 / Cmd+2: Switch to Execution tab
+• Tab: Switch focus between controls
+
+📋 Other:
+• Ctrl+C / Cmd+C: Copy log content
+• Ctrl+A / Cmd+A: Select all log content
+• Ctrl+F / Cmd+F: Find in log""",
 }

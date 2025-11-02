@@ -38,8 +38,15 @@ def build_app():
     print("开始构建应用程序...")
     
     try:
+        # 检查是否在虚拟环境中，如果不是则使用虚拟环境中的pyinstaller
+        pyinstaller_cmd = 'pyinstaller'
+        if os.path.exists('venv/bin/pyinstaller'):
+            pyinstaller_cmd = 'venv/bin/pyinstaller'
+        elif os.path.exists('venv/Scripts/pyinstaller.exe'):
+            pyinstaller_cmd = 'venv/Scripts/pyinstaller.exe'
+        
         # 使用 PyInstaller 构建
-        cmd = ['pyinstaller', '--clean', 'media_copyer.spec']
+        cmd = [pyinstaller_cmd, '--clean', 'media_copyer.spec']
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         
         print("构建成功!")
@@ -77,7 +84,7 @@ def create_dmg_macos():
             shutil.rmtree(temp_dir)
         os.makedirs(temp_dir)
 
-        # 复制应用到临时目录并重命名为带版本号的名称
+        # 复制应用到临时目录
         app_path = None
         if os.path.exists('dist/MediaCopyer.app'):
             # macOS app bundle
@@ -88,16 +95,12 @@ def create_dmg_macos():
             # 检查是否为目录
             if os.path.isdir('dist/MediaCopyer'):
                 app_path = 'dist/MediaCopyer'
-                dest_path = os.path.join(temp_dir, f'MediaCopyer-v{version}')
+                dest_path = os.path.join(temp_dir, 'MediaCopyer')
                 shutil.copytree(app_path, dest_path)
             else:
                 # 普通可执行文件
                 app_path = 'dist/MediaCopyer'
                 shutil.copy(app_path, temp_dir)
-                # 重命名为带版本号的文件
-                old_path = os.path.join(temp_dir, 'MediaCopyer')
-                new_path = os.path.join(temp_dir, f'MediaCopyer-v{version}')
-                os.rename(old_path, new_path)
         else:
             print("错误: 未找到应用文件 dist/MediaCopyer 或 dist/MediaCopyer.app")
             return
@@ -117,7 +120,7 @@ def create_dmg_macos():
 
         # 创建可读写的DMG文件
         cmd = [
-            'hdiutil', 'create', '-volname', f'MediaCopyer v{version} Installer',
+            'hdiutil', 'create', '-volname', 'MediaCopyer Installer',
             '-srcfolder', temp_dir, '-ov', '-format', 'UDRW',
             temp_dmg
         ]
@@ -140,10 +143,10 @@ def create_dmg_macos():
                 print(f"DMG已挂载到: {mount_point}")
                 
                 # 创建AppleScript来设置Finder窗口属性
-                app_name = app_bundle_name if os.path.exists('dist/MediaCopyer.app') else f'MediaCopyer-v{version}'
+                app_name = app_bundle_name if os.path.exists('dist/MediaCopyer.app') else 'MediaCopyer'
                 applescript = f'''
 tell application "Finder"
-    tell disk "MediaCopyer v{version} Installer"
+    tell disk "MediaCopyer Installer"
         open
         set current view of container window to icon view
         set toolbar visible of container window to false
@@ -238,7 +241,7 @@ def create_background_image(bg_dir):
 def main():
     """主函数"""
     version = get_version()
-    print(f"MediaCopyer v{version} 应用打包工具")
+    print(f"MediaCopyer 应用打包工具")
     print("=" * 50)
     
     # 清理之前的构建

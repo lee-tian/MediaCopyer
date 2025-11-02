@@ -4,8 +4,9 @@ Main application window for Media Copyer GUI
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import os
+import webbrowser
 
 from core.utils import check_dependencies
 from .directory_selector import DirectorySelector, MultiSourceSelector, MultiDestinationSelector
@@ -39,6 +40,9 @@ class MediaCopyerApp:
         
         # Set up cleanup when window is destroyed
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
+        
+        # Setup menu bar first
+        self._setup_menu()
         
         self._setup_ui()
         self._setup_processor()
@@ -79,6 +83,45 @@ class MediaCopyerApp:
         except Exception:
             # If setting icon fails, just continue without it
             pass
+    
+    def _setup_menu(self):
+        """Setup the application menu bar"""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        
+        # Check if we're on macOS
+        is_macos = self.root.tk.call('tk', 'windowingsystem') == 'aqua'
+        
+        if is_macos:
+            # On macOS, create the application menu (first menu)
+            app_menu = tk.Menu(menubar, name='apple', tearoff=0)
+            menubar.add_cascade(menu=app_menu)
+            app_menu.add_command(label=_("about") + " MediaCopyer", command=self._show_about)
+            app_menu.add_separator()
+            # macOS will automatically add Quit, Hide, etc.
+            
+            # Help menu
+            self.help_menu = tk.Menu(menubar, name='help', tearoff=0)
+            menubar.add_cascade(label=_("help_menu"), menu=self.help_menu)
+        else:
+            # On other platforms, create a standard Help menu
+            self.help_menu = tk.Menu(menubar, tearoff=0)
+            menubar.add_cascade(label=_("help_menu"), menu=self.help_menu)
+            
+            # Add About to Help menu on non-macOS platforms
+            self.help_menu.add_command(label=_("about"), command=self._show_about)
+            self.help_menu.add_separator()
+        
+        # Add common help menu items
+        self.help_menu.add_command(label=_("user_guide"), command=self._show_user_guide)
+        self.help_menu.add_command(label=_("keyboard_shortcuts"), command=self._show_shortcuts)
+        self.help_menu.add_separator()
+        self.help_menu.add_command(label=_("report_issue"), command=self._report_issue)
+        self.help_menu.add_command(label=_("check_updates"), command=self._check_updates)
+        
+        # Store menu reference for language updates
+        self.menubar = menubar
+        self.is_macos = is_macos
     
     def _setup_ui(self):
         """Setup the tabbed user interface"""
@@ -434,6 +477,9 @@ class MediaCopyerApp:
         
         if hasattr(self, 'next_step_button'):
             self.next_step_button.config(text=_("go_to_execution"))
+        
+        # Update menu
+        self._update_menu_texts()
     
     def _update_card_titles(self):
         """Update card title labels using stored references"""
@@ -452,6 +498,177 @@ class MediaCopyerApp:
         # Update log title
         if hasattr(self, '_log_title_label'):
             self._log_title_label.config(text=_("log"))
+    
+    def _update_menu_texts(self):
+        """Update menu texts when language changes"""
+        if hasattr(self, 'menubar') and hasattr(self, 'help_menu'):
+            # Clear and recreate the help menu
+            self.help_menu.delete(0, 'end')
+            
+            if not getattr(self, 'is_macos', False):
+                # On non-macOS, add About to Help menu
+                self.help_menu.add_command(label=_("about"), command=self._show_about)
+                self.help_menu.add_separator()
+            
+            # Re-add common help menu items with updated text
+            self.help_menu.add_command(label=_("user_guide"), command=self._show_user_guide)
+            self.help_menu.add_command(label=_("keyboard_shortcuts"), command=self._show_shortcuts)
+            self.help_menu.add_separator()
+            self.help_menu.add_command(label=_("report_issue"), command=self._report_issue)
+            self.help_menu.add_command(label=_("check_updates"), command=self._check_updates)
+            
+            # Update cascade labels
+            try:
+                if getattr(self, 'is_macos', False):
+                    # On macOS: App menu (0), Help menu (1)
+                    self.menubar.entryconfig(1, label=_("help_menu"))
+                else:
+                    # On other platforms: Help menu (0)
+                    self.menubar.entryconfig(0, label=_("help_menu"))
+            except tk.TclError:
+                # Ignore errors if menu structure is different
+                pass
+    
+    def _show_user_guide(self):
+        """Show user guide"""
+        guide_text = _("""user_guide_content""")
+        
+        # Create a new window for the user guide
+        guide_window = tk.Toplevel(self.root)
+        guide_window.title(_("user_guide"))
+        guide_window.geometry("600x500")
+        guide_window.transient(self.root)
+        guide_window.grab_set()
+        
+        # Center the window
+        guide_window.update_idletasks()
+        x = (guide_window.winfo_screenwidth() // 2) - (guide_window.winfo_width() // 2)
+        y = (guide_window.winfo_screenheight() // 2) - (guide_window.winfo_height() // 2)
+        guide_window.geometry(f"+{x}+{y}")
+        
+        # Create scrollable text widget
+        frame = ttk.Frame(guide_window, padding=10)
+        frame.pack(fill="both", expand=True)
+        
+        text_widget = tk.Text(frame, wrap=tk.WORD, font=("Arial", 11), 
+                             bg="white", fg="black", padx=10, pady=10)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        text_widget.insert("1.0", guide_text)
+        text_widget.config(state="disabled")
+        
+        # Close button
+        button_frame = ttk.Frame(guide_window)
+        button_frame.pack(fill="x", padx=10, pady=10)
+        
+        ttk.Button(button_frame, text=_("close"), 
+                  command=guide_window.destroy).pack(side="right")
+    
+    def _show_shortcuts(self):
+        """Show keyboard shortcuts"""
+        shortcuts_text = _("""shortcuts_content""")
+        
+        messagebox.showinfo(_("keyboard_shortcuts"), shortcuts_text)
+    
+    def _report_issue(self):
+        """Open issue reporting page"""
+        try:
+            webbrowser.open("https://github.com/lee-tian/MediaCopyer/issues")
+        except Exception:
+            messagebox.showinfo(_("report_issue"), 
+                              _("Please visit: https://github.com/lee-tian/MediaCopyer/issues"))
+    
+    def _check_updates(self):
+        """Check for updates"""
+        try:
+            webbrowser.open("https://github.com/lee-tian/MediaCopyer/releases")
+        except Exception:
+            messagebox.showinfo(_("check_updates"), 
+                              _("Please visit: https://github.com/lee-tian/MediaCopyer/releases"))
+    
+    def _show_about(self):
+        """Show about dialog"""
+        from version import get_version, get_full_version, __author__, __description__
+        
+        about_text = f"""{_("app_name")}: MediaCopyer
+
+{_("version")}: {get_full_version()}
+{_("author")}: {__author__}
+
+{_("description")}:
+{__description__}
+
+{_("features")}:
+• {_("feature_auto_organize")}
+• {_("feature_date_based")}
+• {_("feature_duplicate_handling")}
+• {_("feature_preview_mode")}
+• {_("feature_multilingual")}
+• {_("feature_batch_processing")}
+
+{_("supported_formats")}:
+{_("image_formats")}: JPG, JPEG, PNG, TIFF, BMP, GIF, HEIC, WEBP
+{_("video_formats")}: MP4, MOV, AVI, MKV, WMV, FLV, WEBM, M4V
+
+© 2024-2025 MediaCopyer Team
+{_("license")}: MIT License"""
+        
+        # Create about dialog
+        about_window = tk.Toplevel(self.root)
+        about_window.title(_("about") + " MediaCopyer")
+        about_window.geometry("500x600")
+        about_window.transient(self.root)
+        about_window.grab_set()
+        about_window.resizable(False, False)
+        
+        # Center the window
+        about_window.update_idletasks()
+        x = (about_window.winfo_screenwidth() // 2) - (about_window.winfo_width() // 2)
+        y = (about_window.winfo_screenheight() // 2) - (about_window.winfo_height() // 2)
+        about_window.geometry(f"+{x}+{y}")
+        
+        # Main frame
+        main_frame = ttk.Frame(about_window, padding=20)
+        main_frame.pack(fill="both", expand=True)
+        
+        # App icon (if available)
+        try:
+            icon_path = 'resources/icon.png'
+            if os.path.exists(icon_path):
+                icon_image = tk.PhotoImage(file=icon_path)
+                # Resize icon if needed
+                icon_label = ttk.Label(main_frame, image=icon_image)
+                icon_label.image = icon_image  # Keep reference
+                icon_label.pack(pady=(0, 10))
+        except Exception:
+            pass
+        
+        # Scrollable text area
+        text_frame = ttk.Frame(main_frame)
+        text_frame.pack(fill="both", expand=True)
+        
+        text_widget = tk.Text(text_frame, wrap=tk.WORD, font=("Arial", 10), 
+                             bg="white", fg="black", padx=15, pady=15,
+                             height=20, width=50)
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        text_widget.insert("1.0", about_text)
+        text_widget.config(state="disabled")
+        
+        # Button frame
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill="x", pady=(10, 0))
+        
+        ttk.Button(button_frame, text=_("close"), 
+                  command=about_window.destroy).pack(side="right")
     
     def _on_closing(self):
         """Handle window closing event"""

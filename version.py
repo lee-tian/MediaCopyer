@@ -80,7 +80,7 @@ def get_full_version():
 
 def get_app_name():
     """获取应用名称"""
-    return f"MediaCopyer v{__version__}"
+    return "MediaCopyer"
 
 def get_dmg_name():
     """获取DMG文件名"""
@@ -88,4 +88,4 @@ def get_dmg_name():
 
 def get_app_bundle_name():
     """获取应用包名称"""
-    return f"MediaCopyer-v{__version__}.app"
+    return "MediaCopyer.app"

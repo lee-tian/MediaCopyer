@@ -17,11 +17,11 @@ A Python application to automatically organize photos and videos by their creati
 ## 📥 Quick Start
 
 ### Download Pre-built Application
-**[📥 Download Latest Release](https://github.com/YOUR_USERNAME/MediaCopyer/releases/latest)**
+**[📥 Download Latest Release](https://github.com/lee-tian/MediaCopyer/releases/latest)**
 
 ### Run from Source
 ```bash
-git clone https://github.com/YOUR_USERNAME/MediaCopyer.git
+git clone https://github.com/lee-tian/MediaCopyer.git
 cd MediaCopyer
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
@@ -74,28 +74,39 @@ destination/
 
 ### Quick Release Commands
 
-**macOS/Linux:**
+**一键发布 (推荐):**
 ```bash
+# 自动发布到GitHub Releases (需要GitHub CLI)
+python quick_release.py
+
+# 仅构建不发布
+python quick_release.py --build-only
+
+# 自动模式，无需确认
+python quick_release.py --auto
+```
+
+**传统发布方式:**
+```bash
+# 完整发布流程
+python release.py
+
+# 版本更新
+python update_version.py 1.2.0 "新功能" "修复bug"
+
+# 仅构建
+python build_app.py
+```
+
+**平台脚本:**
+```bash
+# macOS/Linux
 chmod +x release.sh
 ./release.sh patch "Fix bug"      # 1.0.0 → 1.0.1
 ./release.sh minor "New feature"  # 1.0.0 → 1.1.0
-./release.sh major "Breaking"     # 1.0.0 → 2.0.0
-./release.sh build               # Build only
-```
 
-**Windows:**
-```cmd
+# Windows
 release.bat patch "Fix bug"
-release.bat minor "New feature"
-release.bat build
-```
-
-**Python Scripts:**
-```bash
-python make.py patch "Fix bug"
-python make.py minor "New feature"
-python make.py version
-python make.py clean
 ```
 
 ### Manual Version Update
