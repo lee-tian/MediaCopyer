@@ -109,7 +109,7 @@ def create_test_release():
         
         # 推送标签
         print("📤 推送标签...")
-        result = subprocess.run(['git', 'push', 'origin', tag_name], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(['git', 'push', 'origin', tag_name], capture_output=True, text=True, timeout=120)
         if result.returncode != 0:
             print(f"❌ 标签推送失败: {result.stderr}")
             return False
