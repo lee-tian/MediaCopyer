@@ -77,41 +77,41 @@ destination/
 **一键发布 (推荐):**
 ```bash
 # 全自动发布到GitHub Releases (无交互，推荐)
-python auto_release.py
+python scripts/release/auto_release.py
 
 # 交互式发布 (需要GitHub CLI)
-python quick_release.py
+python scripts/release/quick_release.py
 
 # 仅构建不发布
-python quick_release.py --build-only
+python scripts/release/quick_release.py --build-only
 ```
 
 **传统发布方式:**
 ```bash
 # 完整发布流程
-python release.py
+python scripts/release/release.py
 
 # 版本更新
-python update_version.py 1.2.0 "新功能" "修复bug"
+python scripts/utils/update_version.py 1.2.0 "新功能" "修复bug"
 
 # 仅构建
-python build_app.py
+python scripts/build/build_app.py
 ```
 
 **平台脚本:**
 ```bash
 # macOS/Linux
-chmod +x release.sh
-./release.sh patch "Fix bug"      # 1.0.0 → 1.0.1
-./release.sh minor "New feature"  # 1.0.0 → 1.1.0
+chmod +x scripts/platform/release.sh
+./scripts/platform/release.sh patch "Fix bug"      # 1.0.0 → 1.0.1
+./scripts/platform/release.sh minor "New feature"  # 1.0.0 → 1.1.0
 
 # Windows
-release.bat patch "Fix bug"
+scripts\platform\release.bat patch "Fix bug"
 ```
 
 ### Manual Version Update
 ```bash
-python update_version.py 1.2.0 "Add ignore duplicates" "Enhanced analysis"
+python scripts/utils/update_version.py 1.2.0 "Add ignore duplicates" "Enhanced analysis"
 ```
 
 ### Development Setup
@@ -136,10 +136,17 @@ MediaCopyer/
 ├── gui/                    # GUI application
 │   ├── locales/           # Language files
 │   └── *.py               # GUI components
+├── scripts/                # Build and release scripts
+│   ├── build/             # Build scripts
+│   ├── release/           # Release scripts
+│   ├── debug/             # Debug scripts
+│   ├── utils/             # Utility scripts
+│   └── platform/          # Platform scripts
+├── config/                 # Configuration files
+├── docs/                   # Documentation
+├── tools/                  # Development tools
 ├── media_copyer.py         # CLI entry point
-├── media_copyer_gui.py     # GUI entry point
-├── make.py                 # Build/release commands
-└── release.sh/.bat         # Platform scripts
+└── media_copyer_gui.py     # GUI entry point
 ```
 
 ## 🧪 Testing
@@ -153,6 +160,9 @@ python media_copyer_gui.py
 
 # Run specific tests
 python tests/test_i18n_logs.py
+
+# Debug release process
+python scripts/debug/debug_release.py
 ```
 
 ## 📦 Requirements
