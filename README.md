@@ -76,14 +76,14 @@ destination/
 
 **一键发布 (推荐):**
 ```bash
-# 自动发布到GitHub Releases (需要GitHub CLI)
+# 全自动发布到GitHub Releases (无交互，推荐)
+python auto_release.py
+
+# 交互式发布 (需要GitHub CLI)
 python quick_release.py
 
 # 仅构建不发布
 python quick_release.py --build-only
-
-# 自动模式，无需确认
-python quick_release.py --auto
 ```
 
 **传统发布方式:**
