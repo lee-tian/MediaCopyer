@@ -28,7 +28,7 @@ def run_command(cmd, description="", timeout=300):
         print(f"❌ {description}失败: {e.stderr}")
         return False, e.stderr
 
-def check_prerequisites():
+def check_prerequisites(auto_mode=False):
     """检查发布前提条件"""
     print("🔍 检查发布前提条件...")
     
@@ -45,9 +45,12 @@ def check_prerequisites():
     if output.strip():
         print("⚠️ 有未提交的更改:")
         print(output)
-        response = input("是否继续? (y/N): ")
-        if response.lower() != 'y':
-            return False
+        if auto_mode:
+            print("🤖 自动模式：忽略未提交的更改，继续发布")
+        else:
+            response = input("是否继续? (y/N): ")
+            if response.lower() != 'y':
+                return False
     
     # 检查GitHub CLI
     success, _ = run_command("gh --version")
@@ -78,7 +81,7 @@ def main():
     print("=" * 50)
     
     # 检查前提条件
-    prereq_result = check_prerequisites()
+    prereq_result = check_prerequisites(auto_mode=args.auto)
     if prereq_result is False:
         sys.exit(1)
     
