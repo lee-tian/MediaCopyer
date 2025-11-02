@@ -244,7 +244,7 @@ def create_github_release(tag_name, release_dir):
             cmd.append(dmg_path)
         
         print(f"执行命令: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         
         if result.returncode == 0:
             print("✅ GitHub Release 创建成功!")
