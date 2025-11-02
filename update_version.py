@@ -96,8 +96,6 @@ def main():
     changes = None
     if len(sys.argv) > 2:
         changes = sys.argv[2:]
-        # 转换为Python列表格式
-        changes = str(changes).replace("'", '"')
     
     update_version(new_version, changes)
 
