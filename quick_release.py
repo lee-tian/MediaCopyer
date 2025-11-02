@@ -11,16 +11,19 @@ import subprocess
 import argparse
 from version import get_version
 
-def run_command(cmd, description=""):
+def run_command(cmd, description="", timeout=300):
     """运行命令并处理错误"""
     if description:
         print(f"🔄 {description}...")
     
     try:
-        result = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True, timeout=timeout)
         if description:
             print(f"✅ {description}完成")
         return True, result.stdout
+    except subprocess.TimeoutExpired:
+        print(f"❌ {description}超时 (>{timeout}秒)")
+        return False, "命令执行超时"
     except subprocess.CalledProcessError as e:
         print(f"❌ {description}失败: {e.stderr}")
         return False, e.stderr
