@@ -4,7 +4,7 @@
 MediaCopyer 版本信息
 """
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __build__ = "20251101"
 __author__ = "MediaCopyer Team"
 __description__ = "A Python application to automatically organize photos and videos by their creation date"
@@ -43,6 +43,53 @@ VERSION_HISTORY = {
             "优化安装界面，去除版本号显示",
             "更新所有GitHub链接到正确仓库地址",
             "改进发布流程和构建脚本"
+        ]
+    },
+    "1.1.2": {
+        "date": "2025-11-01",
+        "changes": [
+            "[",
+            """,
+            "修",
+            "复",
+            "自",
+            "动",
+            "发",
+            "布",
+            "卡",
+            "住",
+            "问",
+            "题",
+            """,
+            ",",
+            " ",
+            """,
+            "改",
+            "进",
+            "发",
+            "布",
+            "脚",
+            "本",
+            "稳",
+            "定",
+            "性",
+            """,
+            ",",
+            " ",
+            """,
+            "添",
+            "加",
+            "无",
+            "交",
+            "互",
+            "自",
+            "动",
+            "发",
+            "布",
+            "模",
+            "式",
+            """,
+            "]"
         ]
     }
 }
