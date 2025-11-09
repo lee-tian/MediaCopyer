@@ -10,6 +10,7 @@ A Python application to automatically organize photos and videos by their creati
 - **🎯 Multiple Organization Modes**: By date, device, date+device, or file extension
 - **🚫 Ignore Duplicates**: Option to skip duplicate files entirely
 - **📊 Enhanced Analysis**: Detailed before/after copy operation statistics
+- **💾 Auto External Storage Detection**: Automatically detects and adds SD cards, USB drives, and external hard drives on startup
 - **🖥️ GUI Interface**: User-friendly interface with progress tracking
 - **🌍 Internationalization**: English and Chinese language support
 - **🔒 Safe Processing**: Dry-run mode and MD5 verification
@@ -64,6 +65,30 @@ destination/
 2. **By Device**: `Picture/DJI/`, `Video/iPhone/`
 3. **By Date+Device**: `Picture/2024-01-15/DJI/`
 4. **By Extension**: `JPG/`, `MP4/`, `PNG/`
+
+## 💾 Auto External Storage Detection
+
+MediaCopyer automatically detects and adds all connected external storage devices to the source directory list on startup. This feature makes it easy to import photos and videos from:
+
+- 📷 SD cards from cameras
+- 💿 USB flash drives
+- 🔌 External hard drives (HDD/SSD)
+- 📱 Phone storage devices
+- 🎥 Camera memory cards
+
+**Supported Platforms:**
+- **macOS**: Scans `/Volumes` directory, excludes system volumes
+- **Linux**: Scans `/media`, `/mnt`, `/run/media` directories
+- **Windows**: Detects all removable and external drives, excludes system drive
+
+**How it works:**
+1. Connect your external storage devices
+2. Launch MediaCopyer
+3. Devices are automatically added to the source directory list
+4. Review and remove unwanted devices if needed
+5. Configure options and start processing
+
+For more details, see [Auto External Storage Documentation](docs/AUTO_EXTERNAL_STORAGE.md).
 
 ## 📋 Supported Formats
 

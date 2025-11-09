@@ -118,6 +118,10 @@ translations = {
     "setup_complete_guidance": "Setup complete! Click the button on the right to switch to the execution tab and start processing files",
     "go_to_execution": "Go to Execution",
     
+    # External storage detection
+    "auto_detected_external_storage": "Auto-detected {} external storage device(s)",
+    "external_storage_added": "Auto-added external storage: {}",
+    
     # Multi-destination processing messages
     "source_dir_count": "Source directories: {}",
     "source_dir_number": "Source directory {}: {}",

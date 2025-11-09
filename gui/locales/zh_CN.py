@@ -118,6 +118,10 @@ translations = {
     "setup_complete_guidance": "设置已完成！点击右侧按钮开始执行文件处理",
     "go_to_execution": "开始执行",
     
+    # External storage detection
+    "auto_detected_external_storage": "自动检测到 {} 个外置存储设备",
+    "external_storage_added": "已自动添加外置存储: {}",
+    
     # Additional UI text
     "dependency_warning": "警告：某些功能可能不可用",
     

@@ -154,6 +154,7 @@ class MultiSourceSelector(ttk.Frame, I18nMixin):
         self.columnconfigure(0, weight=1)
         self._setup_widgets()
         self._load_last_directories()
+        self._auto_add_external_storage()
     
     def _setup_widgets(self):
         """Setup the widgets for multiple source selection"""
@@ -266,6 +267,44 @@ class MultiSourceSelector(ttk.Frame, I18nMixin):
             last_dirs = self.config.get_last_source_directories()
             if last_dirs and self.directory_vars:
                 self.directory_vars[0].set(last_dirs[0])
+    
+    def _auto_add_external_storage(self):
+        """Automatically detect and add all external storage devices to source list"""
+        from core.utils import get_external_storage_devices
+        
+        try:
+            external_devices = get_external_storage_devices()
+            
+            if not external_devices:
+                return
+            
+            # Check if we already have the first directory var set
+            first_var_empty = not self.directory_vars[0].get().strip() if self.directory_vars else True
+            
+            # If first var is empty, use it for the first device
+            start_index = 0
+            if first_var_empty and external_devices:
+                self.directory_vars[0].set(external_devices[0])
+                start_index = 1
+            
+            # Add remaining devices
+            for device in external_devices[start_index:]:
+                # Check if device is already in the list
+                already_added = any(var.get() == device for var in self.directory_vars)
+                if not already_added:
+                    self._add_source_selector()
+                    # Set the newly added selector to this device
+                    self.directory_vars[-1].set(device)
+            
+            # Log the auto-detection (optional, can be shown in main window log)
+            print(f"Auto-detected {len(external_devices)} external storage device(s)")
+            for device in external_devices:
+                print(f"  - {device}")
+        
+        except Exception as e:
+            # Silently fail if detection doesn't work
+            print(f"Failed to auto-detect external storage: {e}")
+            pass
     
     def get_sources(self):
         """Get list of selected source directories"""

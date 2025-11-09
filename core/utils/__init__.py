@@ -36,6 +36,13 @@ from .string_utils import (
     sanitize_filename
 )
 
+# Import external storage utilities
+from .external_storage import (
+    get_external_storage_devices,
+    is_external_storage,
+    get_device_info
+)
+
 # System and dependency checks
 import sys
 
@@ -125,6 +132,10 @@ __all__ = [
     'safe_filename',
     'format_date_path',
     'sanitize_filename',
+    # External storage utilities
+    'get_external_storage_devices',
+    'is_external_storage',
+    'get_device_info',
     # System checks
     'check_dependencies',
     'get_dependency_status'
